@@ -43,8 +43,7 @@ public class SpecimenRepository {
         mapToJson(dbRecord.get(DIGITAL_SPECIMEN.ORIGINAL_DATA)));
     return new DigitalSpecimenRecord(dbRecord.get(DIGITAL_SPECIMEN.ID),
         dbRecord.get(DIGITAL_SPECIMEN.MIDSLEVEL), dbRecord.get(DIGITAL_SPECIMEN.VERSION),
-        dbRecord.get(DIGITAL_SPECIMEN.CREATED), digitalSpecimenWrapper, null, null, null,
-        List.of());
+        dbRecord.get(DIGITAL_SPECIMEN.CREATED), digitalSpecimenWrapper, null, null, null, null);
   }
 
   private DigitalSpecimen mapToDigitalSpecimen(JSONB jsonb) {

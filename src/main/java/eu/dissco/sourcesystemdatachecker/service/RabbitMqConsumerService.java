@@ -3,7 +3,6 @@ package eu.dissco.sourcesystemdatachecker.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
-import eu.dissco.sourcesystemdatachecker.exception.DisscoRepositoryException;
 import java.util.List;
 import java.util.Objects;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +22,8 @@ public class RabbitMqConsumerService {
 
   @RabbitListener(queues = {
       "${rabbitmq.queue-name:source-system-data-checker-queue}"}, containerFactory = "consumerBatchContainerFactory")
-  public void getMessages(@Payload List<String> messages) throws DisscoRepositoryException {
+  public void getMessages(@Payload List<String> messages)
+      throws JsonProcessingException {
 
     var events = messages.stream().map(message -> {
       try {

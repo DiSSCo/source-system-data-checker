@@ -8,7 +8,10 @@ import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaRecord;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalMedia;
 import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
@@ -24,11 +27,16 @@ public class MediaRepository {
   private final ObjectMapper mapper;
 
   // Maps Media URI to its DOI
-  public List<DigitalMediaRecord> getExistingDigitalMedia(Set<String> mediaURIs) {
+  public Map<String, DigitalMediaRecord> getExistingDigitalMedia(Set<String> mediaURIs) {
     return context.select(DIGITAL_MEDIA_OBJECT.asterisk())
         .from(DIGITAL_MEDIA_OBJECT)
         .where(DIGITAL_MEDIA_OBJECT.MEDIA_URL.in(mediaURIs))
-        .fetch(this::mapToDigitalMediaRecord);
+        .fetch(this::mapToDigitalMediaRecord)
+        .stream()
+        .collect(Collectors.toMap(
+            DigitalMediaRecord::accessURI,
+            Function.identity()
+        ));
   }
 
   private DigitalMediaRecord mapToDigitalMediaRecord(Record dbRecord) {

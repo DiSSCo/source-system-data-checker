@@ -13,7 +13,7 @@ public record DigitalSpecimenRecord(
     Set<String> masIds,
     Boolean forceMasSchedule,
     Boolean isDataFromSourceSystem,
-    List<DigitalMediaEvent> digitalMediaEvents
+    List<DigitalMediaRecord> mediaRecords
 ) {
 
 }
