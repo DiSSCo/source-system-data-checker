@@ -28,6 +28,10 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
+		<sonar.organization>dissco</sonar.organization>
+		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
+		<sonar.coverage.jacoco.xmlReportPaths>../app-it/target/site/jacoco-aggregate/jacoco.xml
+		</sonar.coverage.jacoco.xmlReportPaths>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -56,6 +60,38 @@
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+			<plugin>
+				<groupId>org.jacoco</groupId>
+				<artifactId>jacoco-maven-plugin</artifactId>
+				<version>0.8.13</version>
+				<executions>
+					<execution>
+						<id>prepare-agent</id>
+						<goals>
+							<goal>prepare-agent</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>prepare-agent-integration</id>
+						<goals>
+							<goal>prepare-agent-integration</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>report</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>report-integration</id>
+						<goals>
+							<goal>report-integration</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
