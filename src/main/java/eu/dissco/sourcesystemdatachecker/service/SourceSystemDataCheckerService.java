@@ -7,9 +7,11 @@ import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaEvent;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaRecord;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenRecord;
+import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenWrapper;
 import eu.dissco.sourcesystemdatachecker.domain.FilteredDigitalSpecimens;
 import eu.dissco.sourcesystemdatachecker.repository.MediaRepository;
 import eu.dissco.sourcesystemdatachecker.repository.SpecimenRepository;
+import eu.dissco.sourcesystemdatachecker.schema.EntityRelationship;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -41,8 +43,9 @@ public class SourceSystemDataCheckerService {
     var currentSpecimenRecords = getCurrentSpecimen(specimenEventMap);
     var filteredSpecimenEvents = filterChangedAndNewSpecimens(specimenEventMap,
         currentSpecimenRecords);
+    var currentMediaRecords = getCurrentMedia(specimenEventMap);
     var filteredMediaEvents = filterChangedAndNewMedia(filteredSpecimenEvents.unchangedEvents(),
-        currentSpecimenRecords);
+        currentMediaRecords);
     publishChangedAndNewSpecimens(filteredSpecimenEvents.newOrChangedEvents());
     publishedChangedMedia(filteredMediaEvents);
   }
@@ -73,41 +76,37 @@ public class SourceSystemDataCheckerService {
       Map<String, DigitalSpecimenEvent> specimenEventMap,
       Map<String, DigitalSpecimenRecord> currentSpecimenRecords) {
     if (currentSpecimenRecords.isEmpty()) {
-      return new FilteredDigitalSpecimens(Set.of(), new HashSet<>(specimenEventMap.values()));
+      return new FilteredDigitalSpecimens(new HashSet<>(specimenEventMap.values()), Set.of());
     }
     var changedSpecimenEvents = specimenEventMap
         .entrySet()
         .stream()
-        .filter(e -> !
-            currentSpecimenRecords.containsKey(e.getKey()) ||
-            currentSpecimenRecords.containsKey(e.getKey()) &&
-                specimenIsChanged(e.getValue(), currentSpecimenRecords.get(e.getKey())))
+        .filter(event ->
+            !currentSpecimenRecords.containsKey(event.getKey()) ||
+                specimenIsChanged(event.getValue(), currentSpecimenRecords.get(event.getKey())))
         .map(Map.Entry::getValue)
         .collect(Collectors.toSet());
     var unchangedSpecimens = specimenEventMap
         .values().stream()
-        .filter(changedSpecimenEvents::contains).collect(Collectors.toSet());
+        .filter(specimenEvent -> !changedSpecimenEvents.contains(specimenEvent))
+        .collect(Collectors.toSet());
     return new FilteredDigitalSpecimens(changedSpecimenEvents, unchangedSpecimens);
   }
 
   private static boolean specimenIsChanged(DigitalSpecimenEvent specimenEvent,
       DigitalSpecimenRecord currentSpecimenRecord) {
-    return Objects.equals(specimenEvent.digitalSpecimenWrapper().originalAttributes(),
-        currentSpecimenRecord.digitalSpecimenWrapper().originalAttributes()) &&
-        specimenMediaEntityRelationshipsAreUnchanged(specimenEvent, currentSpecimenRecord);
+    return !Objects.equals(specimenEvent.digitalSpecimenWrapper().originalAttributes(),
+        currentSpecimenRecord.digitalSpecimenWrapper().originalAttributes()) ||
+        specimenMediaEntityRelationshipsAreChanged(specimenEvent, currentSpecimenRecord);
   }
 
-  private static boolean specimenMediaEntityRelationshipsAreUnchanged(
+  private static boolean specimenMediaEntityRelationshipsAreChanged(
       DigitalSpecimenEvent specimenEvent, DigitalSpecimenRecord currentSpecimenRecord) {
     var incomingMedia = specimenEvent.digitalMediaEvents().stream()
         .map(mediaEvent -> mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI()).collect(
             Collectors.toSet());
-    var existingMedia = currentSpecimenRecord.mediaRecords().stream().map(
-        DigitalMediaRecord::accessURI).collect(
-        Collectors.toSet());
-    return incomingMedia.equals(existingMedia);
+    return !incomingMedia.equals(currentSpecimenRecord.mediaUris());
   }
-
 
   /*
     Takes incoming media events from UNCHANGED specimens and the corresponding records of the events that exist
@@ -118,30 +117,27 @@ public class SourceSystemDataCheckerService {
 
   public Set<DigitalMediaEvent> filterChangedAndNewMedia(
       Set<DigitalSpecimenEvent> unchangedSpecimenEvents,
-      Map<String, DigitalSpecimenRecord> currentSpecimenRecords) {
+      Map<String, DigitalMediaRecord> currentMediaRecords) {
     if (unchangedSpecimenEvents.isEmpty()) {
       return Set.of();
     }
-    var currentMediaRecords = currentSpecimenRecords.values().stream()
-        .map(DigitalSpecimenRecord::mediaRecords)
-        .flatMap(Collection::stream)
-        .collect(Collectors.toMap(
-            DigitalMediaRecord::accessURI,
-            Function.identity()
-        ));
-    // We don't need to check if the media are new because the media ERs in "unchanged specimens" are unchanged
+
+    // We check if media are new in case a specimen has an ER to a media that hasn't been published
     return unchangedSpecimenEvents
         .stream()
         .map(DigitalSpecimenEvent::digitalMediaEvents)
         .flatMap(Collection::stream)
-        .filter(mediaEvent -> mediaIsChanged(mediaEvent, currentMediaRecords.get(
-            mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI())))
+        .filter(mediaEvent ->
+            mediaIsChanged(mediaEvent, currentMediaRecords.get(
+                mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI()))
+                || !currentMediaRecords.containsKey(
+                mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI()))
         .collect(Collectors.toSet());
   }
 
   private static boolean mediaIsChanged(DigitalMediaEvent mediaEvent,
       DigitalMediaRecord mediaRecord) {
-    return Objects.equals(mediaEvent.digitalMediaWrapper().originalAttributes(),
+    return !Objects.equals(mediaEvent.digitalMediaWrapper().originalAttributes(),
         mediaRecord.originalAttributes());
   }
 
@@ -153,32 +149,29 @@ public class SourceSystemDataCheckerService {
    */
   private Map<String, DigitalSpecimenRecord> getCurrentSpecimen(
       Map<String, DigitalSpecimenEvent> eventMap) {
-
-    var mediaUris = eventMap.values().stream().map(DigitalSpecimenEvent::digitalMediaEvents)
-        .flatMap(Collection::stream)
-        .map(mediaEvent -> mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI())
-        .collect(Collectors.toSet());
-    var media = mediaRepository.getExistingDigitalMedia(mediaUris);
     return specimenRepository.getDigitalSpecimens(
             eventMap.keySet())
         .stream()
-        .map(dbRecord -> {
-          var event = eventMap.get(dbRecord.digitalSpecimenWrapper().physicalSpecimenId());
-          return new DigitalSpecimenRecord(
-              dbRecord.id(),
-              dbRecord.midsLevel(),
-              dbRecord.version(),
-              dbRecord.created(),
-              dbRecord.digitalSpecimenWrapper(),
-              event.masList(),
-              event.forceMasSchedule(),
-              event.isDataFromSourceSystem(),
-              getDigitalMediaRecordsForSpecimen(media, event));
-        })
+        .map(dbRecord ->
+            new DigitalSpecimenRecord(
+                dbRecord.id(),
+                dbRecord.digitalSpecimenWrapper(),
+                getCurrentDigitalMediaRecordsForSpecimen(dbRecord.digitalSpecimenWrapper())))
         .collect(
             toMap(
                 specimenRecord -> specimenRecord.digitalSpecimenWrapper().physicalSpecimenId(),
                 Function.identity()));
+  }
+
+  private Map<String, DigitalMediaRecord> getCurrentMedia(
+      Map<String, DigitalSpecimenEvent> specimenEventMap) {
+
+    var incomingMediaUris = specimenEventMap.values().stream()
+        .map(DigitalSpecimenEvent::digitalMediaEvents)
+        .flatMap(Collection::stream)
+        .map(mediaEvent -> mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI())
+        .collect(Collectors.toSet());
+    return mediaRepository.getExistingDigitalMedia(incomingMediaUris);
   }
 
   private Set<DigitalSpecimenEvent> removeDuplicatesInBatch(
@@ -194,18 +187,15 @@ public class SourceSystemDataCheckerService {
             entry.getKey());
         var specimenIsNotPublished = true;
         for (var duplicateSpecimenEvent : entry.getValue()) {
-          if (specimenIsNotPublished && checkIfMediaIsUnique(duplicateSpecimenEvent,
-              uniqueMediaSet)) {
+          if (specimenIsNotPublished) {
             addToUniqueSets(uniqueSet, duplicateSpecimenEvent, uniqueMediaSet);
             specimenIsNotPublished = false;
           } else {
             republishSpecimenEvent(duplicateSpecimenEvent);
           }
         }
-      } else if (checkIfMediaIsUnique(entry.getValue().getFirst(), uniqueMediaSet)) {
-        addToUniqueSets(uniqueSet, entry.getValue().getFirst(), uniqueMediaSet);
       } else {
-        republishSpecimenEvent(entry.getValue().getFirst());
+        addToUniqueSets(uniqueSet, entry.getValue().getFirst(), uniqueMediaSet);
       }
     }
     return uniqueSet;
@@ -219,13 +209,6 @@ public class SourceSystemDataCheckerService {
     }
   }
 
-  private static boolean checkIfMediaIsUnique(DigitalSpecimenEvent entry,
-      HashSet<String> uniqueMediaSet) {
-    return entry.digitalMediaEvents().stream()
-        .map(e -> e.digitalMediaWrapper().attributes().getAcAccessURI())
-        .noneMatch(uniqueMediaSet::contains);
-  }
-
   private static void addToUniqueSets(LinkedHashSet<DigitalSpecimenEvent> uniqueSet,
       DigitalSpecimenEvent entry, HashSet<String> uniqueMediaSet) {
     uniqueSet.add(entry);
@@ -234,15 +217,16 @@ public class SourceSystemDataCheckerService {
         .toList());
   }
 
-
-  private static List<DigitalMediaRecord> getDigitalMediaRecordsForSpecimen(
-      Map<String, DigitalMediaRecord> currentMediaRecords,
-      DigitalSpecimenEvent specimenEvent) {
-    var mediaUris = specimenEvent.digitalMediaEvents().stream()
-        .map(mediaEvent -> mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI()).collect(
-            Collectors.toSet());
-    return mediaUris.stream().map(currentMediaRecords::get).toList();
+  /*
+  Looks in the current version of the specimen and extracts the related media URIs
+   */
+  private static Set<String> getCurrentDigitalMediaRecordsForSpecimen(
+      DigitalSpecimenWrapper currentSpecimenWrapper) {
+    return currentSpecimenWrapper.attributes().getOdsHasEntityRelationships()
+        .stream()
+        .filter(er -> "hasMedia".equals(er.getDwcRelationshipOfResource()))
+        .map(EntityRelationship::getDwcRelatedResourceID)
+        .collect(Collectors.toSet());
   }
-
 
 }

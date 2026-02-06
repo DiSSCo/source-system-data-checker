@@ -7,8 +7,7 @@ public record DigitalMediaRecord(
     String id,
     String accessURI,
     DigitalMedia attributes,
-    JsonNode originalAttributes,
-    Boolean forceMasSchedule
+    JsonNode originalAttributes
 ) {
 
 }

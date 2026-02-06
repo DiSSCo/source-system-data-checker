@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenRecord;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenWrapper;
 import eu.dissco.sourcesystemdatachecker.exception.DisscoJsonBMappingException;
-import eu.dissco.sourcesystemdatachecker.exception.DisscoRepositoryException;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalSpecimen;
 import java.util.List;
 import java.util.Set;
@@ -17,7 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
 import org.jooq.Record;
-import org.jooq.exception.DataAccessException;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -42,8 +40,7 @@ public class SpecimenRepository {
         mapToDigitalSpecimen(dbRecord.get(DIGITAL_SPECIMEN.DATA)),
         mapToJson(dbRecord.get(DIGITAL_SPECIMEN.ORIGINAL_DATA)));
     return new DigitalSpecimenRecord(dbRecord.get(DIGITAL_SPECIMEN.ID),
-        dbRecord.get(DIGITAL_SPECIMEN.MIDSLEVEL), dbRecord.get(DIGITAL_SPECIMEN.VERSION),
-        dbRecord.get(DIGITAL_SPECIMEN.CREATED), digitalSpecimenWrapper, null, null, null, null);
+        digitalSpecimenWrapper, null);
   }
 
   private DigitalSpecimen mapToDigitalSpecimen(JSONB jsonb) {
