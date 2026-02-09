@@ -15,9 +15,8 @@ public class RabbitMqProperties {
   @Positive
   private int batchSize = 500;
 
-  private Specimen specimen = new Specimen();
+  private NameUsage nameUsage = new NameUsage();
   private Media media = new Media();
-  private Dlq dlq = new Dlq();
   private Republish republish = new Republish();
 
   @Data
@@ -34,7 +33,7 @@ public class RabbitMqProperties {
 
   @Data
   @Validated
-  public static class Specimen {
+  public static class NameUsage {
 
     @NotBlank
     private String exchangeName = "nu-search-exchange";
@@ -54,18 +53,5 @@ public class RabbitMqProperties {
     @NotNull
     private String routingKeyName = "digital-media";
   }
-
-  @Data
-  @Validated
-  public static class Dlq {
-
-    @NotNull
-    private String exchangeName = "source-system-data-checker-exchange-dlq";
-
-    @NotNull
-    private String routingKeyName = "source-system-data-checker-queue-dlq";
-
-  }
-
 
 }

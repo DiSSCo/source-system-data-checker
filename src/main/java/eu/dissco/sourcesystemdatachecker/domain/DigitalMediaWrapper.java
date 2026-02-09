@@ -1,8 +1,8 @@
 package eu.dissco.sourcesystemdatachecker.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalMedia;
+import tools.jackson.databind.JsonNode;
 
 public record DigitalMediaWrapper(
     @JsonProperty("ods:type")

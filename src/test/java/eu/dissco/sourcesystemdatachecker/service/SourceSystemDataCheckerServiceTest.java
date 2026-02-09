@@ -17,10 +17,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
-import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.times;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.sourcesystemdatachecker.repository.MediaRepository;
 import eu.dissco.sourcesystemdatachecker.repository.SpecimenRepository;
 import java.util.Collections;
@@ -52,7 +50,7 @@ class SourceSystemDataCheckerServiceTest {
   }
 
   @Test
-  void testNewSpecimen() throws JsonProcessingException {
+  void testNewSpecimen() {
     // Given
     var event = givenDigitalSpecimenEvent();
 
@@ -63,11 +61,11 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event));
 
     // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
   }
 
   @Test
-  void testUnchangedSpecimenNoMedia() throws JsonProcessingException {
+  void testUnchangedSpecimenNoMedia() {
     // Given
     var event = givenDigitalSpecimenEvent();
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
@@ -79,10 +77,12 @@ class SourceSystemDataCheckerServiceTest {
 
     // Then
     then(rabbitMqPublisherService).shouldHaveNoInteractions();
+    then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI_1));
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
   @Test
-  void testUnchangedSpecimenUnchangedMedia() throws JsonProcessingException {
+  void testUnchangedSpecimenUnchangedMedia() {
     // Given
     var event = givenDigitalSpecimenEventWithMedia();
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(
@@ -95,10 +95,12 @@ class SourceSystemDataCheckerServiceTest {
 
     // Then
     then(rabbitMqPublisherService).shouldHaveNoInteractions();
+    then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI_1));
+    then(mediaRepository).should().updateLastChecked(Set.of(MEDIA_DOI_1));
   }
 
   @Test
-  void testChangedSpecimenNoMedia() throws JsonProcessingException {
+  void testChangedSpecimenNoMedia() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of());
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Map.of());
@@ -109,11 +111,13 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event));
 
     // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(specimenRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
   @Test
-  void testChangedSpecimenWithMedia() throws JsonProcessingException {
+  void testChangedSpecimenWithMedia() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of(givenDigitalMediaEvent()));
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(
@@ -125,12 +129,14 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event));
 
     // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(specimenRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
 
   @Test
-  void testSpecimenWithNewMediaEr() throws JsonProcessingException {
+  void testSpecimenWithNewMediaEr() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false,
         List.of(givenDigitalMediaEvent(), givenDigitalMediaEvent(MEDIA_URI_2, false)));
@@ -143,11 +149,13 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event));
 
     // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(specimenRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
   @Test
-  void testSpecimenWithRemovedMediaEr() throws JsonProcessingException {
+  void testSpecimenWithRemovedMediaEr() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false,
         List.of(givenDigitalMediaEvent()));
@@ -162,11 +170,13 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event));
 
     // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(specimenRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
   @Test
-  void testUnchangedSpecimenChangedMedia() throws JsonProcessingException {
+  void testUnchangedSpecimenChangedMedia() {
     // Given
     var mediaEvent = givenDigitalMediaEvent(MEDIA_URI_1, true);
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false, List.of(mediaEvent));
@@ -181,10 +191,12 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should().publishMediaEvent(mediaEvent);
     then(rabbitMqPublisherService).shouldHaveNoMoreInteractions();
+    then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI_1));
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
   @Test
-  void testNewDuplicateSpecimen() throws JsonProcessingException {
+  void testNewDuplicateSpecimen() {
     // Given
     var event = givenDigitalSpecimenEvent();
 
@@ -195,13 +207,15 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event, event));
 
     // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event);
-    then(rabbitMqPublisherService).should().republishSpecimenEvent(event);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(rabbitMqPublisherService).should().republishEvent(event);
     then(rabbitMqPublisherService).shouldHaveNoMoreInteractions();
+    then(specimenRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
   @Test
-  void testNewDuplicateSpecimenDuplicateMedia() throws JsonProcessingException {
+  void testNewDuplicateSpecimenDuplicateMedia() {
     // Given
     var event = givenDigitalSpecimenEventWithMedia();
 
@@ -212,13 +226,15 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event, event));
 
     // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event);
-    then(rabbitMqPublisherService).should().republishSpecimenEvent(event);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(rabbitMqPublisherService).should().republishEvent(event);
     then(rabbitMqPublisherService).shouldHaveNoMoreInteractions();
+    then(specimenRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
   @Test
-  void testNewDuplicateSpecimenDistinctMedia() throws JsonProcessingException {
+  void testNewDuplicateSpecimenDistinctMedia() {
     // Given
     var event = givenDigitalSpecimenEventWithMedia();
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false,
@@ -231,13 +247,15 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event, event2));
 
     // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event);
-    then(rabbitMqPublisherService).should().republishSpecimenEvent(event2);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(rabbitMqPublisherService).should().republishEvent(event2);
     then(rabbitMqPublisherService).shouldHaveNoMoreInteractions();
+    then(specimenRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
   @Test
-  void testTwoNewSpecimens() throws JsonProcessingException {
+  void testTwoNewSpecimens() {
     // Given
     var event = givenDigitalSpecimenEvent();
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_2, false, List.of());
@@ -249,45 +267,49 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event, event2));
 
     // Then
-    then(rabbitMqPublisherService).should(times(2)).publishSpecimenEvent(any());
+    then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());
+    then(specimenRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
 
   @Test
-  void testOneNewSpecimenOneChanged() throws JsonProcessingException {
+  void testOneNewSpecimenOneChanged() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of()); // exists, is changed
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_2, false, List.of()); // New
 
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(List.of(givenDigitalSpecimenRecord()));
+    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(
+        List.of(givenDigitalSpecimenRecord()));
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
     service.handleMessages(List.of(event, event2));
 
     // Then
-    then(rabbitMqPublisherService).should(times(2)).publishSpecimenEvent(any());
+    then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());
   }
 
 
   @Test
-  void testOneNewSpecimenOneUnchanged() throws JsonProcessingException {
+  void testOneNewSpecimenOneUnchanged() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false, List.of()); // exists, is changed
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_2, false, List.of()); // New
 
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(List.of(givenDigitalSpecimenRecord()));
+    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(
+        List.of(givenDigitalSpecimenRecord()));
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
     service.handleMessages(List.of(event, event2));
 
     // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event2);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(event2);
   }
 
   @Test
-  void testTwoNewSpecimensNonUniqueMedia() throws JsonProcessingException {
+  void testTwoNewSpecimensNonUniqueMedia() {
     // Given
     var event = givenDigitalSpecimenEventWithMedia();
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_2, false, List.of(givenDigitalMediaEvent()));
@@ -299,24 +321,7 @@ class SourceSystemDataCheckerServiceTest {
     service.handleMessages(List.of(event, event2));
 
     // Then
-    then(rabbitMqPublisherService).should(times(2)).publishSpecimenEvent(any());
+    then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());
   }
-
-  @Test
-  void testNewDuplicateSpecimenRepublishFails() throws JsonProcessingException {
-    // Given
-    var event = givenDigitalSpecimenEvent();
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
-    doThrow(JsonProcessingException.class).when(rabbitMqPublisherService).republishSpecimenEvent(event);
-
-    // When
-    service.handleMessages(List.of(event, event));
-
-    // Then
-    then(rabbitMqPublisherService).should().publishSpecimenEvent(event);
-    then(rabbitMqPublisherService).shouldHaveNoMoreInteractions();
-  }
-
 
 }

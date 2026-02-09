@@ -2,13 +2,13 @@ package eu.dissco.sourcesystemdatachecker.service;
 
 import static java.util.stream.Collectors.toMap;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaEvent;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaRecord;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenRecord;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenWrapper;
 import eu.dissco.sourcesystemdatachecker.domain.FilteredDigitalSpecimens;
+import eu.dissco.sourcesystemdatachecker.domain.FilteredDigtialMedia;
 import eu.dissco.sourcesystemdatachecker.repository.MediaRepository;
 import eu.dissco.sourcesystemdatachecker.repository.SpecimenRepository;
 import eu.dissco.sourcesystemdatachecker.schema.EntityRelationship;
@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -34,7 +35,7 @@ public class SourceSystemDataCheckerService {
   private final MediaRepository mediaRepository;
   private final RabbitMqPublisherService rabbitMqPublisherService;
 
-  public void handleMessages(List<DigitalSpecimenEvent> events) throws JsonProcessingException {
+  public void handleMessages(List<DigitalSpecimenEvent> events) {
     var uniqueEvents = removeDuplicatesInBatch(events);
     var specimenEventMap = uniqueEvents.stream().collect(Collectors.toMap(
         event -> event.digitalSpecimenWrapper().physicalSpecimenId(),
@@ -44,24 +45,36 @@ public class SourceSystemDataCheckerService {
     var filteredSpecimenEvents = filterChangedAndNewSpecimens(specimenEventMap,
         currentSpecimenRecords);
     var currentMediaRecords = getCurrentMedia(specimenEventMap);
-    var filteredMediaEvents = filterChangedAndNewMedia(filteredSpecimenEvents.unchangedEvents(),
+    var filteredMediaEvents = filterChangedAndNewMedia(filteredSpecimenEvents.unchangedSpecimens().values(),
         currentMediaRecords);
-    publishChangedAndNewSpecimens(filteredSpecimenEvents.newOrChangedEvents());
-    publishedChangedMedia(filteredMediaEvents);
+    publishChangedAndNewSpecimens(filteredSpecimenEvents.newOrChangedSpecimens());
+    publishedChangedMedia(filteredMediaEvents.newOrChangedMedia());
+    updateLastCheckedSpecimens(filteredSpecimenEvents.unchangedSpecimens().keySet());
+    updateLastCheckedMedia(filteredMediaEvents.unchangedMedia());
   }
 
-  private void publishChangedAndNewSpecimens(Set<DigitalSpecimenEvent> digitalSpecimenEvents)
-      throws JsonProcessingException {
-    for (var digitalSpecimenEvent : digitalSpecimenEvents) {
-      rabbitMqPublisherService.publishSpecimenEvent(digitalSpecimenEvent);
-    }
+  private void publishChangedAndNewSpecimens(Set<DigitalSpecimenEvent> digitalSpecimenEvents) {
+    digitalSpecimenEvents.forEach(
+        rabbitMqPublisherService::publishNameUsageEvent);
   }
 
-  private void publishedChangedMedia(Set<DigitalMediaEvent> digitalMediaEvents)
-      throws JsonProcessingException {
-    for (var digitalMediaEvent : digitalMediaEvents) {
-      rabbitMqPublisherService.publishMediaEvent(digitalMediaEvent);
+  private void publishedChangedMedia(Set<DigitalMediaEvent> digitalMediaEvents) {
+    digitalMediaEvents.forEach(rabbitMqPublisherService::publishMediaEvent);
+  }
+
+  private void updateLastCheckedSpecimens(Set<String> unchangedRecords){
+    if (unchangedRecords.isEmpty()){
+      return;
     }
+    specimenRepository.updateLastChecked(unchangedRecords);
+  }
+
+  private void updateLastCheckedMedia(Set<DigitalMediaRecord> unchangedRecords){
+    if (unchangedRecords.isEmpty()){
+      return;
+    }
+    var mediaIds = unchangedRecords.stream().map(DigitalMediaRecord::id).collect(Collectors.toSet());
+    mediaRepository.updateLastChecked(mediaIds);
   }
 
   /*
@@ -76,7 +89,7 @@ public class SourceSystemDataCheckerService {
       Map<String, DigitalSpecimenEvent> specimenEventMap,
       Map<String, DigitalSpecimenRecord> currentSpecimenRecords) {
     if (currentSpecimenRecords.isEmpty()) {
-      return new FilteredDigitalSpecimens(new HashSet<>(specimenEventMap.values()), Set.of());
+      return new FilteredDigitalSpecimens(new HashSet<>(specimenEventMap.values()), Map.of());
     }
     var changedSpecimenEvents = specimenEventMap
         .entrySet()
@@ -89,7 +102,10 @@ public class SourceSystemDataCheckerService {
     var unchangedSpecimens = specimenEventMap
         .values().stream()
         .filter(specimenEvent -> !changedSpecimenEvents.contains(specimenEvent))
-        .collect(Collectors.toSet());
+        .collect(Collectors.toMap(
+            event -> currentSpecimenRecords.get(event.digitalSpecimenWrapper().physicalSpecimenId()).id(),
+            Function.identity()
+        ));
     return new FilteredDigitalSpecimens(changedSpecimenEvents, unchangedSpecimens);
   }
 
@@ -115,15 +131,15 @@ public class SourceSystemDataCheckerService {
     This list will be sent downstream to the ingestion process.
    */
 
-  public Set<DigitalMediaEvent> filterChangedAndNewMedia(
-      Set<DigitalSpecimenEvent> unchangedSpecimenEvents,
+  public FilteredDigtialMedia filterChangedAndNewMedia(
+      Collection<DigitalSpecimenEvent> unchangedSpecimenEvents,
       Map<String, DigitalMediaRecord> currentMediaRecords) {
+    // No unchanged specimens, so all media will be published with the specimen
     if (unchangedSpecimenEvents.isEmpty()) {
-      return Set.of();
+      return new FilteredDigtialMedia(Set.of(), Set.of());
     }
 
-    // We check if media are new in case a specimen has an ER to a media that hasn't been published
-    return unchangedSpecimenEvents
+    var changedMediaWithUnchangedSpecimen = unchangedSpecimenEvents
         .stream()
         .map(DigitalSpecimenEvent::digitalMediaEvents)
         .flatMap(Collection::stream)
@@ -132,7 +148,15 @@ public class SourceSystemDataCheckerService {
                 mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI()))
                 || !currentMediaRecords.containsKey(
                 mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI()))
+        .collect(Collectors.toMap(
+            event -> event.digitalMediaWrapper().attributes().getAcAccessURI(),
+            Function.identity()
+        ));
+    var unchangedMedia = currentMediaRecords.entrySet().stream()
+        .filter(e -> !changedMediaWithUnchangedSpecimen.containsKey(e.getKey()))
+        .map(Entry::getValue)
         .collect(Collectors.toSet());
+    return new FilteredDigtialMedia(new HashSet<>(changedMediaWithUnchangedSpecimen.values()), unchangedMedia);
   }
 
   private static boolean mediaIsChanged(DigitalMediaEvent mediaEvent,
@@ -202,11 +226,7 @@ public class SourceSystemDataCheckerService {
   }
 
   private void republishSpecimenEvent(DigitalSpecimenEvent event) {
-    try {
-      rabbitMqPublisherService.republishSpecimenEvent(event);
-    } catch (JsonProcessingException e) {
-      log.error("Fatal exception, unable to republish specimen message due to invalid json", e);
-    }
+    rabbitMqPublisherService.republishEvent(event);
   }
 
   private static void addToUniqueSets(LinkedHashSet<DigitalSpecimenEvent> uniqueSet,

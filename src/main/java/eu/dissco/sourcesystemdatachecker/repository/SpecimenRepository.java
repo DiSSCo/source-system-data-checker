@@ -2,21 +2,18 @@ package eu.dissco.sourcesystemdatachecker.repository;
 
 import static eu.dissco.sourcesystemdatachecker.database.jooq.Tables.DIGITAL_SPECIMEN;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenRecord;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenWrapper;
-import eu.dissco.sourcesystemdatachecker.exception.DisscoJsonBMappingException;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalSpecimen;
+import java.time.Instant;
 import java.util.List;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jooq.DSLContext;
-import org.jooq.JSONB;
 import org.jooq.Record;
 import org.springframework.stereotype.Repository;
+import tools.jackson.databind.json.JsonMapper;
 
 @Repository
 @RequiredArgsConstructor
@@ -24,7 +21,7 @@ import org.springframework.stereotype.Repository;
 public class SpecimenRepository {
 
   private final DSLContext context;
-  private final ObjectMapper mapper;
+  private final JsonMapper mapper;
 
   public List<DigitalSpecimenRecord> getDigitalSpecimens(Set<String> specimenList) {
     return context.select(DIGITAL_SPECIMEN.asterisk())
@@ -33,34 +30,23 @@ public class SpecimenRepository {
         .fetch(this::mapToDigitalSpecimenRecord);
   }
 
+  public void updateLastChecked(Set<String> currentDigitalSpecimen) {
+    context.update(DIGITAL_SPECIMEN)
+        .set(DIGITAL_SPECIMEN.LAST_CHECKED, Instant.now())
+        .where(DIGITAL_SPECIMEN.ID.in(currentDigitalSpecimen))
+        .execute();
+  }
+
+
   private DigitalSpecimenRecord mapToDigitalSpecimenRecord(Record dbRecord) {
     var digitalSpecimenWrapper = new DigitalSpecimenWrapper(
         dbRecord.get(DIGITAL_SPECIMEN.PHYSICAL_SPECIMEN_ID),
         dbRecord.get(DIGITAL_SPECIMEN.TYPE),
-        mapToDigitalSpecimen(dbRecord.get(DIGITAL_SPECIMEN.DATA)),
-        mapToJson(dbRecord.get(DIGITAL_SPECIMEN.ORIGINAL_DATA)));
+        mapper.convertValue(dbRecord.get(DIGITAL_SPECIMEN.DATA), DigitalSpecimen.class),
+        mapper.readTree(dbRecord.get(DIGITAL_SPECIMEN.ORIGINAL_DATA).data()));
     return new DigitalSpecimenRecord(dbRecord.get(DIGITAL_SPECIMEN.ID),
         digitalSpecimenWrapper, null);
   }
-
-  private DigitalSpecimen mapToDigitalSpecimen(JSONB jsonb) {
-    try {
-      return mapper.readValue(jsonb.data(), DigitalSpecimen.class);
-    } catch (JsonProcessingException e) {
-      log.warn("Unable to map jsonb to digital specimen: {}", jsonb.data(), e);
-      return new DigitalSpecimen();
-    }
-  }
-
-  private JsonNode mapToJson(JSONB jsonb) {
-    try {
-      return mapper.readValue(jsonb.data(), JsonNode.class);
-    } catch (JsonProcessingException e) {
-      throw new DisscoJsonBMappingException("Failed to parse jsonb field to json: " + jsonb.data(),
-          e);
-    }
-  }
-
 
 }
 

@@ -1,8 +1,8 @@
 package eu.dissco.sourcesystemdatachecker.domain;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalSpecimen;
+import tools.jackson.databind.JsonNode;
 
 public record DigitalSpecimenWrapper(
     @JsonProperty("ods:normalisedPhysicalSpecimenID")

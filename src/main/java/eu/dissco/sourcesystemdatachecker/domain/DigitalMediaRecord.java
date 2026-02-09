@@ -1,7 +1,7 @@
 package eu.dissco.sourcesystemdatachecker.domain;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalMedia;
+import tools.jackson.databind.JsonNode;
 
 public record DigitalMediaRecord(
     String id,

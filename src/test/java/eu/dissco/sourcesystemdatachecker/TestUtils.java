@@ -1,10 +1,10 @@
 package eu.dissco.sourcesystemdatachecker;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.module.SimpleModule;
-import eu.dissco.sourcesystemdatachecker.configuration.InstantDeserializer;
-import eu.dissco.sourcesystemdatachecker.configuration.InstantSerializer;
+import static eu.dissco.sourcesystemdatachecker.configuration.ApplicationConfiguration.DATE_STRING;
+
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonSetter.Value;
+import com.fasterxml.jackson.annotation.Nulls;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaEvent;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaRecord;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaWrapper;
@@ -15,10 +15,16 @@ import eu.dissco.sourcesystemdatachecker.schema.DigitalMedia;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalSpecimen;
 import eu.dissco.sourcesystemdatachecker.schema.EntityRelationship;
 import java.net.URI;
+import java.text.SimpleDateFormat;
 import java.time.Instant;
+import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.stream.Collectors;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.json.JsonMapper;
 
 public class TestUtils {
 
@@ -31,23 +37,26 @@ public class TestUtils {
   public static final String MEDIA_URI_1 = "https://media.com/1";
   public static final String MEDIA_URI_2 = "https://media.com/2";
   public static final String SPECIMEN_DOI_1 = "https://doi.org/10.3535/AAA-AAA-AAA";
-  public static final String SPECIMEN_DOI_2 = "https://doi.org/10.3535/BBB-BBB-BBB";
   public static final String MEDIA_DOI_1 = "https://doi.org/10.3535/111-111-111";
   public static final String MEDIA_DOI_2 = "https://doi.org/10.3535/222-222-222";
   public static final String CURRENT_VAL = "default";
   public static final String CHANGED_VAL = "changed";
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.000Z");
 
-  public static final ObjectMapper MAPPER;
-
-  static {
-    var mapper = new ObjectMapper().findAndRegisterModules();
-    SimpleModule dateModule = new SimpleModule();
-    dateModule.addSerializer(Instant.class, new InstantSerializer());
-    dateModule.addDeserializer(Instant.class, new InstantDeserializer());
-    mapper.registerModule(dateModule);
-    MAPPER = mapper;
-  }
+  public static final JsonMapper MAPPER = JsonMapper.builder()
+      .findAndAddModules()
+      .changeDefaultPropertyInclusion(incl -> incl
+          .withValueInclusion(Include.NON_NULL)
+          .withContentInclusion(Include.NON_NULL))
+      .defaultDateFormat(new SimpleDateFormat(DATE_STRING))
+      .defaultTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC))
+      .withConfigOverride(List.class, cfg ->
+          cfg.setNullHandling(Value.forContentNulls(Nulls.AS_EMPTY)
+              .withValueNulls(Nulls.AS_EMPTY)))
+      .withConfigOverride(Map.class, cfg ->
+          cfg.setNullHandling(Value.forContentNulls(Nulls.AS_EMPTY)
+              .withValueNulls(Nulls.AS_EMPTY)))
+      .build();
 
   public static DigitalSpecimenRecord givenDigitalSpecimenRecord() {
     return givenDigitalSpecimenRecord(SPECIMEN_DOI_1, PHYSICAL_ID_1, Set.of());
@@ -76,7 +85,8 @@ public class TestUtils {
   public static DigitalSpecimenEvent givenDigitalSpecimenEvent(String physicalSpecimenId,
       boolean specimenIsChanged, List<DigitalMediaEvent> mediaEvents) {
     var mediaUris = mediaEvents.stream()
-        .map(event -> event.digitalMediaWrapper().attributes().getAcAccessURI()).collect(Collectors.toSet());
+        .map(event -> event.digitalMediaWrapper().attributes().getAcAccessURI())
+        .collect(Collectors.toSet());
     return new DigitalSpecimenEvent(
         Set.of(),
         givenDigitalSpecimenWrapper(physicalSpecimenId, specimenIsChanged, mediaUris),
@@ -91,13 +101,14 @@ public class TestUtils {
     return new DigitalSpecimenWrapper(
         physicalSpecimenId,
         "ods:DigitalSpecimen",
-        new DigitalSpecimen().withOdsHasEntityRelationships(givenMediaEntityRelationships(mediaUris)),
+        new DigitalSpecimen().withOdsHasEntityRelationships(
+            givenMediaEntityRelationships(mediaUris)),
         givenOriginalAttributes(isChanged)
     );
   }
 
-  private static List<EntityRelationship> givenMediaEntityRelationships(Set<String> mediaUris){
-   return mediaUris.stream()
+  private static List<EntityRelationship> givenMediaEntityRelationships(Set<String> mediaUris) {
+    return mediaUris.stream()
         .map(uri -> new EntityRelationship()
             .withDwcRelationshipOfResource("hasMedia")
             .withDwcRelatedResourceID(uri)
