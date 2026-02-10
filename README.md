@@ -21,7 +21,19 @@ the source system data changes; it is the raw data from the source system as cap
 translator. If the incoming `original_data` differs from what is in the database, we consider this
 an update.
 
-## Distinguishing between changes in Specimens and Media
+## RabbitMQ Queues
+
+**Consumes from:** `source-system-data-checker-queue` (from translator)
+
+**Publishes to:** One of:
+
+* `name-usage-service-queue` - regular ingestion process, when specimen and media are new/changed
+* `digital-media-queue` - when only media needs to be updated, send directly to processing service
+  and skip NU service
+* `digital-specimen-queue`- to NU service, but only specimen and a subset (or none) of media are
+  new/changed
+
+## Distinguishing Between Changes in Specimens and Media
 
 A specimen event may include zero or more media objects. An unchanged specimen may not necessarily
 mean its media are unchanged, and vice versa. To address this, we may publish objects to one of
@@ -38,21 +50,54 @@ three queues:
    the `name-usage-service-specimen` queue.
     - Planned for future release
 
-# Run Locally
+# Running Locally
 
-Running locally requires: 
-- Access to the rabbitmq cluster via localhost:5672 
-  - `kubectl port-forward -n rabbitmq rabbitmq-cluster-server-0 5672`
-- Access to the database (including whitelisted IP address)
+## Requirements
 
-## RabbitMQ Queues
+Running locally requires:
 
-**Consumes from:** `source-system-data-checker-queue` (from translator)
-**Publishes to:** `name-usage-service-queue` (to name usage service)
+- Access to the rabbitmq cluster via localhost:5672
+    - `kubectl port-forward -n rabbitmq rabbitmq-cluster-server-0 5672`
+- Access to the relational database (IP address is whitelisted)
+
+## Domain Object generation
+
+DiSSCo uses JSON schemas to generate domain objects (e.g. Digital Specimens, Digital Media, etc)
+based on the openDS specification. These files are stored in the
+`/target/generated-sources/jsonschema2pojo directory`, and must be generated before running locally.
+The following steps indicate how to generate these objects. 
+
+### Importing Up To-Date JSON Schemas
+
+The JSON schemas are stored in `/resources/json-schemas`. The source of truth for JSON schemas is
+the [DiSSCO Schemas Site](https://schemas.dissco.tech/schemas/fdo-type/). If the JSON schema has
+changed, the changes can be downloaded using the maven runner script.
+
+1. **Update the pom.xml**: The exec-maven-plugin in the pom indicated which version of the schema to
+   download. If the version has changed, update the pom.
+2. **Run the exec plugin**: Before the plugin can be run, the code must be compiled. Run the
+   following in the terminal (or via the IDE interface):
+
+```
+mvn compile 
+mvn exec:java
+```
+
+### Building POJOs
+
+DiSSCo uses the [JsonSchema2Pojo](https://github.com/joelittlejohn/jsonschema2pojo) plugin to
+generate domain objects based on our JSON Schemas. Once the JSON schemas have been updated, you can
+run the following from the terminal (or via the IDE interface):
+
+```
+mvn clean
+mvn jsonschema2pojo:generate
+```
 
 ## Application Properties
 
 ### Mandatory properties
+
 `spring.rabbitmq.username=` RabbitMQ username
 `spring.rabbitmq.password=` RabbitMQ password
 `spring.rabbitmq.host=` localhost (default)
@@ -61,7 +106,9 @@ Running locally requires:
 `spring.datasource.password=` database password
 
 ### Optional Properties
-Users can manually set exchanges and routing keys for: 
+
+Users can manually set exchanges and routing keys for:
+
 * Republish events (queue this service consumes from)
 * Media events
 * Name Usage events
