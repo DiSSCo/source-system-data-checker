@@ -14,22 +14,32 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>source-system-data-checker</name>
   <description>source-system-data-checker</description>
-  <url/>
+  <url>https://github.com/DiSSCo/source-system-data-checker</url>
   <licenses>
-    <license/>
+    <license>
+      <name>Apache License 2.0</name>
+      <url>https://www.apache.org/licenses/LICENSE-2.0</url>
+    </license>
   </licenses>
   <developers>
-    <developer/>
+    <developer>
+      <name>Soulaine Theocharides</name>
+      <email>soulaine.theocharides@naturalis.nl</email>
+      <organization>Distributed System of Scientific Collections</organization>
+      <organizationUrl>https://www.dissco.eu/</organizationUrl>
+    </developer>
   </developers>
   <scm>
-    <connection/>
-    <developerConnection/>
+    <connection>scm:git:git://github.com/DiSSCo/source-system-data-checker.git</connection>
+    <developerConnection>scm:git:ssh://github.com:DiSSCo/source-system-data-checker.git
+    </developerConnection>
     <tag/>
-    <url/>
+    <url>https://github.com/DiSSCo/source-system-data-checker/tree/main</url>
   </scm>
   <properties>
     <jakarta.json.version>3.1.1</jakarta.json.version>
     <java.version>25</java.version>
+    <jacoco.version>0.8.14</jacoco.version>
     <testcontainers.version>1.21.4</testcontainers.version>
     <sonar.organization>dissco</sonar.organization>
     <sonar.host.url>https://sonarcloud.io</sonar.host.url>
@@ -187,6 +197,38 @@
             </path>
           </annotationProcessorPaths>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.jacoco</groupId>
+        <artifactId>jacoco-maven-plugin</artifactId>
+        <version>${jacoco.version}</version>
+        <executions>
+          <execution>
+            <id>prepare-agent</id>
+            <goals>
+              <goal>prepare-agent</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>prepare-agent-integration</id>
+            <goals>
+              <goal>prepare-agent-integration</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report</id>
+            <phase>prepare-package</phase>
+            <goals>
+              <goal>report</goal>
+            </goals>
+          </execution>
+          <execution>
+            <id>report-integration</id>
+            <goals>
+              <goal>report-integration</goal>
+            </goals>
+          </execution>
+        </executions>
       </plugin>
     </plugins>
   </build>
