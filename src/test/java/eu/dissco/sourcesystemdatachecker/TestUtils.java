@@ -2,7 +2,6 @@ package eu.dissco.sourcesystemdatachecker;
 
 import static eu.dissco.sourcesystemdatachecker.configuration.ApplicationConfiguration.DATE_STRING;
 
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonSetter.Value;
 import com.fasterxml.jackson.annotation.Nulls;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaEvent;
@@ -45,17 +44,14 @@ public class TestUtils {
 
   public static final JsonMapper MAPPER = JsonMapper.builder()
       .findAndAddModules()
-      .changeDefaultPropertyInclusion(incl -> incl
-          .withValueInclusion(Include.NON_NULL)
-          .withContentInclusion(Include.NON_NULL))
       .defaultDateFormat(new SimpleDateFormat(DATE_STRING))
       .defaultTimeZone(TimeZone.getTimeZone(ZoneOffset.UTC))
       .withConfigOverride(List.class, cfg ->
-          cfg.setNullHandling(Value.forContentNulls(Nulls.AS_EMPTY)
-              .withValueNulls(Nulls.AS_EMPTY)))
+          cfg.setNullHandling(Value.forValueNulls(Nulls.AS_EMPTY)))
       .withConfigOverride(Map.class, cfg ->
-          cfg.setNullHandling(Value.forContentNulls(Nulls.AS_EMPTY)
-              .withValueNulls(Nulls.AS_EMPTY)))
+          cfg.setNullHandling(Value.forValueNulls(Nulls.AS_EMPTY)))
+      .withConfigOverride(Set.class, cfg ->
+          cfg.setNullHandling(Value.forValueNulls(Nulls.AS_EMPTY)))
       .build();
 
   public static DigitalSpecimenRecord givenDigitalSpecimenRecord() {

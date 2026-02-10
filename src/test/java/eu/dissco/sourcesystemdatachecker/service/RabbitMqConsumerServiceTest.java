@@ -24,7 +24,7 @@ class RabbitMqConsumerServiceTest {
   }
 
   @Test
-  void testHandleMessages() throws Exception {
+  void testHandleMessages() {
     // Given
     var message = MAPPER.writeValueAsString(givenDigitalSpecimenEvent());
 

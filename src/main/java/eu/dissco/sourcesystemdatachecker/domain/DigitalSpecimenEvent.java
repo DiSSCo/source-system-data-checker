@@ -17,7 +17,7 @@ public record DigitalSpecimenEvent(
       Boolean isDataFromSourceSystem) {
     this.masList = masList;
     this.digitalSpecimenWrapper = digitalSpecimenWrapper;
-    this.digitalMediaEvents = digitalMediaEvents;
+    this.digitalMediaEvents = Objects.requireNonNullElse(digitalMediaEvents, List.of());
     this.forceMasSchedule = forceMasSchedule;
     this.isDataFromSourceSystem = Objects.requireNonNullElse(isDataFromSourceSystem, Boolean.TRUE);
   }
