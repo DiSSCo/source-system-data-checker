@@ -4,6 +4,7 @@ import static eu.dissco.sourcesystemdatachecker.TestUtils.CREATED;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MAPPER;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.PHYSICAL_ID_1;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.SPECIMEN_DOI_1;
+import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalSpecimenRecord;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalSpecimenWrapper;
 import static eu.dissco.sourcesystemdatachecker.database.jooq.Tables.DIGITAL_SPECIMEN;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
@@ -48,6 +49,23 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
     assertThat(result).isEqualTo(List.of(expected));
   }
 
+  @Test
+  void testUpdateLastChecked(){
+    // Given
+    insertSpecimen(givenDigitalSpecimenRecord());
+
+    // When
+    repository.updateLastChecked(Set.of(SPECIMEN_DOI_1));
+    var result = context.select(DIGITAL_SPECIMEN.asterisk())
+        .from(DIGITAL_SPECIMEN)
+        .where(DIGITAL_SPECIMEN.ID.eq(SPECIMEN_DOI_1))
+        .fetchOne(DIGITAL_SPECIMEN.LAST_CHECKED, Instant.class);
+
+    // Then
+    assertThat(result).isAfter(CREATED);
+  }
+
+
   private void insertSpecimen(DigitalSpecimenRecord specimenRecord){
     context.insertInto(DIGITAL_SPECIMEN)
         .set(DIGITAL_SPECIMEN.ID, specimenRecord.id())
@@ -60,8 +78,8 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
         .set(DIGITAL_SPECIMEN.ORGANIZATION_ID, "https://ror.org/aaa")
         .set(DIGITAL_SPECIMEN.SOURCE_SYSTEM_ID, "https://hdl.handle.net/20.1025.5000/AAA")
         .set(DIGITAL_SPECIMEN.CREATED, CREATED)
-        .set(DIGITAL_SPECIMEN.LAST_CHECKED, Instant.now())
-        .set(DIGITAL_SPECIMEN.MODIFIED, Instant.now())
+        .set(DIGITAL_SPECIMEN.LAST_CHECKED, CREATED)
+        .set(DIGITAL_SPECIMEN.MODIFIED, CREATED)
         .set(DIGITAL_SPECIMEN.DATA, JSONB.valueOf(
             MAPPER.valueToTree(specimenRecord.digitalSpecimenWrapper().attributes())
                     .toString().replace("\\u0000", "")))
