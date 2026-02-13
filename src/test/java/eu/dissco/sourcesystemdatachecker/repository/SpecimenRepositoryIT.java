@@ -3,7 +3,7 @@ package eu.dissco.sourcesystemdatachecker.repository;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.CREATED;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MAPPER;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.PHYSICAL_ID_1;
-import static eu.dissco.sourcesystemdatachecker.TestUtils.SPECIMEN_DOI_1;
+import static eu.dissco.sourcesystemdatachecker.TestUtils.SPECIMEN_DOI;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalSpecimenRecord;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalSpecimenWrapper;
 import static eu.dissco.sourcesystemdatachecker.database.jooq.Tables.DIGITAL_SPECIMEN;
@@ -36,8 +36,8 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
   void testGetSpecimen(){
     // Given
     var expected = new DigitalSpecimenRecord(
-        SPECIMEN_DOI_1,
-        givenDigitalSpecimenWrapper(PHYSICAL_ID_1, false, Set.of()),
+        SPECIMEN_DOI,
+        givenDigitalSpecimenWrapper(PHYSICAL_ID_1, false),
         null
     );
     insertSpecimen(expected);
@@ -55,10 +55,10 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
     insertSpecimen(givenDigitalSpecimenRecord());
 
     // When
-    repository.updateLastChecked(Set.of(SPECIMEN_DOI_1));
+    repository.updateLastChecked(Set.of(SPECIMEN_DOI));
     var result = context.select(DIGITAL_SPECIMEN.asterisk())
         .from(DIGITAL_SPECIMEN)
-        .where(DIGITAL_SPECIMEN.ID.eq(SPECIMEN_DOI_1))
+        .where(DIGITAL_SPECIMEN.ID.eq(SPECIMEN_DOI))
         .fetchOne(DIGITAL_SPECIMEN.LAST_CHECKED, Instant.class);
 
     // Then

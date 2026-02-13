@@ -1,5 +1,6 @@
 package eu.dissco.sourcesystemdatachecker.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -7,6 +8,7 @@ import java.util.Set;
 public record DigitalSpecimenEvent(
     Set<String> masList,
     DigitalSpecimenWrapper digitalSpecimenWrapper,
+    @JsonProperty("digitalMediaEvents")
     List<DigitalMediaEvent> digitalMediaEvents,
     Boolean forceMasSchedule,
     Boolean isDataFromSourceSystem

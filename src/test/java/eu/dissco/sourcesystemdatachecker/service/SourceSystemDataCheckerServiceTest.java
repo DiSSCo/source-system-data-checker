@@ -6,7 +6,7 @@ import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_URI_1;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_URI_2;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.PHYSICAL_ID_1;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.PHYSICAL_ID_2;
-import static eu.dissco.sourcesystemdatachecker.TestUtils.SPECIMEN_DOI_1;
+import static eu.dissco.sourcesystemdatachecker.TestUtils.SPECIMEN_DOI;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalMediaEvent;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalMediaRecord;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalSpecimenEvent;
@@ -77,7 +77,7 @@ class SourceSystemDataCheckerServiceTest {
 
     // Then
     then(rabbitMqPublisherService).shouldHaveNoInteractions();
-    then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI_1));
+    then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI));
     then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
@@ -95,7 +95,7 @@ class SourceSystemDataCheckerServiceTest {
 
     // Then
     then(rabbitMqPublisherService).shouldHaveNoInteractions();
-    then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI_1));
+    then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI));
     then(mediaRepository).should().updateLastChecked(Set.of(MEDIA_DOI_1));
   }
 
@@ -161,10 +161,10 @@ class SourceSystemDataCheckerServiceTest {
         List.of(givenDigitalMediaEvent()));
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord(), MEDIA_URI_2,
-            givenDigitalMediaRecord(MEDIA_URI_2, MEDIA_DOI_1)));
+            givenDigitalMediaRecord(MEDIA_DOI_2, MEDIA_URI_2)));
     given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
-        List.of(givenDigitalSpecimenRecord(SPECIMEN_DOI_1, PHYSICAL_ID_1, Set.of(
-            MEDIA_URI_1, MEDIA_URI_2))));
+        List.of(givenDigitalSpecimenRecord(SPECIMEN_DOI, PHYSICAL_ID_1, Map.of(
+            MEDIA_URI_1, MEDIA_DOI_1, MEDIA_URI_2, MEDIA_DOI_2))));
 
     // When
     service.handleMessages(List.of(event));
@@ -191,7 +191,7 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should().publishMediaEvent(mediaEvent);
     then(rabbitMqPublisherService).shouldHaveNoMoreInteractions();
-    then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI_1));
+    then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI));
     then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 

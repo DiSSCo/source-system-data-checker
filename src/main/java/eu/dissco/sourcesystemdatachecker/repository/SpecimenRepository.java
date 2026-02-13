@@ -42,7 +42,7 @@ public class SpecimenRepository {
     var digitalSpecimenWrapper = new DigitalSpecimenWrapper(
         dbRecord.get(DIGITAL_SPECIMEN.PHYSICAL_SPECIMEN_ID),
         dbRecord.get(DIGITAL_SPECIMEN.TYPE),
-        mapper.convertValue(dbRecord.get(DIGITAL_SPECIMEN.DATA), DigitalSpecimen.class),
+        mapper.readValue(dbRecord.get(DIGITAL_SPECIMEN.DATA).data(), DigitalSpecimen.class),
         mapper.readTree(dbRecord.get(DIGITAL_SPECIMEN.ORIGINAL_DATA).data()));
     return new DigitalSpecimenRecord(dbRecord.get(DIGITAL_SPECIMEN.ID),
         digitalSpecimenWrapper, null);

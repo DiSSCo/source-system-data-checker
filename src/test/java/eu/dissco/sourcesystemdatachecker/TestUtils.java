@@ -17,11 +17,11 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
-import java.util.stream.Collectors;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -35,9 +35,9 @@ public class TestUtils {
   public static final String PHYSICAL_ID_2 = "AVES_2";
   public static final String MEDIA_URI_1 = "https://media.com/1";
   public static final String MEDIA_URI_2 = "https://media.com/2";
-  public static final String SPECIMEN_DOI_1 = "https://doi.org/10.3535/AAA-AAA-AAA";
-  public static final String MEDIA_DOI_1 = "https://doi.org/10.3535/111-111-111";
-  public static final String MEDIA_DOI_2 = "https://doi.org/10.3535/222-222-222";
+  public static final String SPECIMEN_DOI = "10.3535/AAA-AAA-AAA";
+  public static final String MEDIA_DOI_1 = "10.3535/111-111-111";
+  public static final String MEDIA_DOI_2 = "10.3535/222-222-222";
   public static final String CURRENT_VAL = "default";
   public static final String CHANGED_VAL = "changed";
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.000Z");
@@ -55,18 +55,19 @@ public class TestUtils {
       .build();
 
   public static DigitalSpecimenRecord givenDigitalSpecimenRecord() {
-    return givenDigitalSpecimenRecord(SPECIMEN_DOI_1, PHYSICAL_ID_1, Set.of());
+    return givenDigitalSpecimenRecord(SPECIMEN_DOI, PHYSICAL_ID_1, Map.of());
   }
 
   public static DigitalSpecimenRecord givenDigitalSpecimenRecordWithMedia() {
-    return givenDigitalSpecimenRecord(SPECIMEN_DOI_1, PHYSICAL_ID_1,
-        Set.of(MEDIA_URI_1));
+    return givenDigitalSpecimenRecord(SPECIMEN_DOI, PHYSICAL_ID_1,
+        Map.of(MEDIA_URI_1, MEDIA_DOI_1));
   }
 
   public static DigitalSpecimenRecord givenDigitalSpecimenRecord(String id,
-      String physicalSpecimenId, Set<String> mediaUris) {
+      String physicalSpecimenId, Map<String, String> mediaUriIdMap) {
     return new DigitalSpecimenRecord(
-        id, givenDigitalSpecimenWrapper(physicalSpecimenId, false, mediaUris), mediaUris);
+        id, givenDigitalSpecimenWrapperWithMediaErs(physicalSpecimenId, false,
+            new HashSet<>(mediaUriIdMap.values())), mediaUriIdMap.keySet());
   }
 
 
@@ -80,35 +81,42 @@ public class TestUtils {
 
   public static DigitalSpecimenEvent givenDigitalSpecimenEvent(String physicalSpecimenId,
       boolean specimenIsChanged, List<DigitalMediaEvent> mediaEvents) {
-    var mediaUris = mediaEvents.stream()
-        .map(event -> event.digitalMediaWrapper().attributes().getAcAccessURI())
-        .collect(Collectors.toSet());
     return new DigitalSpecimenEvent(
         Set.of(),
-        givenDigitalSpecimenWrapper(physicalSpecimenId, specimenIsChanged, mediaUris),
+        givenDigitalSpecimenWrapper(physicalSpecimenId, specimenIsChanged),
         mediaEvents,
         false,
         false);
   }
 
   public static DigitalSpecimenWrapper givenDigitalSpecimenWrapper(String physicalSpecimenId,
-      boolean isChanged, Set<String> mediaUris) {
-
+      boolean isChanged) {
     return new DigitalSpecimenWrapper(
         physicalSpecimenId,
         "ods:DigitalSpecimen",
-        new DigitalSpecimen().withOdsHasEntityRelationships(
-            givenMediaEntityRelationships(mediaUris)),
+        new DigitalSpecimen(),
         givenOriginalAttributes(isChanged)
     );
   }
 
-  private static List<EntityRelationship> givenMediaEntityRelationships(Set<String> mediaUris) {
-    return mediaUris.stream()
-        .map(uri -> new EntityRelationship()
-            .withDwcRelationshipOfResource("hasMedia")
-            .withDwcRelatedResourceID(uri)
-            .withOdsRelatedResourceURI(URI.create(uri)))
+  public static DigitalSpecimenWrapper givenDigitalSpecimenWrapperWithMediaErs(
+      String physicalSpecimenId,
+      boolean isChanged, Set<String> mediaIds) {
+    return new DigitalSpecimenWrapper(
+        physicalSpecimenId,
+        "ods:DigitalSpecimen",
+        new DigitalSpecimen().withOdsHasEntityRelationships(
+            givenMediaEntityRelationships(mediaIds)),
+        givenOriginalAttributes(isChanged)
+    );
+  }
+
+  private static List<EntityRelationship> givenMediaEntityRelationships(Set<String> mediaIds) {
+    return mediaIds.stream()
+        .map(mediaId -> new EntityRelationship()
+            .withDwcRelationshipOfResource("hasDigitalMedia")
+            .withDwcRelatedResourceID(mediaId)
+            .withOdsRelatedResourceURI(URI.create(mediaId)))
         .toList();
   }
 
