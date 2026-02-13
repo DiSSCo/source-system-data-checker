@@ -1,7 +1,5 @@
 package eu.dissco.sourcesystemdatachecker.service;
 
-import static java.util.stream.Collectors.toMap;
-
 import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaEvent;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaRecord;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
