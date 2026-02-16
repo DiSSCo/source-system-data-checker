@@ -86,6 +86,7 @@ public class TestUtils {
         givenDigitalSpecimenWrapper(physicalSpecimenId, specimenIsChanged),
         mediaEvents,
         false,
+        false,
         false);
   }
 

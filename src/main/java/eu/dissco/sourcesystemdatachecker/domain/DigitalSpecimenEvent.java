@@ -11,17 +11,19 @@ public record DigitalSpecimenEvent(
     @JsonProperty("digitalMediaEvents")
     List<DigitalMediaEvent> digitalMediaEvents,
     Boolean forceMasSchedule,
-    Boolean isDataFromSourceSystem
+    Boolean isDataFromSourceSystem,
+    Boolean updateMediaEntityRelationships
 ) {
 
   public DigitalSpecimenEvent(Set<String> masList, DigitalSpecimenWrapper digitalSpecimenWrapper,
       List<DigitalMediaEvent> digitalMediaEvents, Boolean forceMasSchedule,
-      Boolean isDataFromSourceSystem) {
+      Boolean isDataFromSourceSystem, Boolean updateMediaEntityRelationships) {
     this.masList = masList;
     this.digitalSpecimenWrapper = digitalSpecimenWrapper;
     this.digitalMediaEvents = Objects.requireNonNullElse(digitalMediaEvents, List.of());
     this.forceMasSchedule = forceMasSchedule;
     this.isDataFromSourceSystem = Objects.requireNonNullElse(isDataFromSourceSystem, Boolean.TRUE);
+    this.updateMediaEntityRelationships = Objects.requireNonNullElse(updateMediaEntityRelationships, Boolean.TRUE);
   }
 
 }

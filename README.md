@@ -27,11 +27,12 @@ an update.
 
 **Publishes to:** One of:
 
-* `name-usage-service-queue` - regular ingestion process, when specimen and media are new/changed
+* `name-usage-service-queue` - regular ingestion process, when specimen and media are new/changed.
+    * Note: If one or more media for a specimen event is unchanged, we set the flag
+      `updateMediaEntityRelationships=false` in the specimen event. We do not update media Entity
+      Relationships for specimen events with this flag.
 * `digital-media-queue` - when only media needs to be updated, send directly to processing service
   and skip NU service
-* `digital-specimen-queue`- to NU service, but only specimen and a subset (or none) of media are
-  new/changed
 
 ## Distinguishing Between Changes in Specimens and Media
 
@@ -65,7 +66,7 @@ Running locally requires:
 DiSSCo uses JSON schemas to generate domain objects (e.g. Digital Specimens, Digital Media, etc)
 based on the openDS specification. These files are stored in the
 `/target/generated-sources/jsonschema2pojo directory`, and must be generated before running locally.
-The following steps indicate how to generate these objects. 
+The following steps indicate how to generate these objects.
 
 ### Importing Up To-Date JSON Schemas
 

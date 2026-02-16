@@ -117,23 +117,41 @@ class SourceSystemDataCheckerServiceTest {
   }
 
   @Test
-  void testChangedSpecimenWithMedia() {
+  void testChangedSpecimenChangedMedia() {
+    // Given
+    var mediaEvent = givenDigitalMediaEvent(MEDIA_URI_1, true);
+    var specimenEvent =  givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of(mediaEvent));
+    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
+    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
+        List.of(givenDigitalSpecimenRecord()));
+
+    // When
+    service.handleMessages(List.of(specimenEvent));
+
+    // Then
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(specimenEvent);
+    then(specimenRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoMoreInteractions();
+  }
+
+  @Test
+  void testChangedSpecimenWithUnchangedMedia() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of(givenDigitalMediaEvent()));
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
     given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
         List.of(givenDigitalSpecimenRecordWithMedia()));
+    var eventWithoutMedia = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of());
 
     // When
     service.handleMessages(List.of(event));
 
     // Then
-    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(rabbitMqPublisherService).should().publishNameUsageEvent(eventWithoutMedia);
     then(specimenRepository).shouldHaveNoMoreInteractions();
-    then(mediaRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).should().updateLastChecked(Set.of(MEDIA_DOI_1));
   }
-
 
   @Test
   void testSpecimenWithNewMediaEr() {
