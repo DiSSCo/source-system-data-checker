@@ -58,7 +58,7 @@ class SourceSystemDataCheckerServiceTest {
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
-    service.handleMessages(List.of(event));
+    service.handleMessages(Set.of(event));
 
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
@@ -73,7 +73,7 @@ class SourceSystemDataCheckerServiceTest {
         List.of(givenDigitalSpecimenRecord()));
 
     // When
-    service.handleMessages(List.of(event));
+    service.handleMessages(Set.of(event));
 
     // Then
     then(rabbitMqPublisherService).shouldHaveNoInteractions();
@@ -91,7 +91,7 @@ class SourceSystemDataCheckerServiceTest {
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
-    service.handleMessages(List.of(event));
+    service.handleMessages(Set.of(event));
 
     // Then
     then(rabbitMqPublisherService).shouldHaveNoInteractions();
@@ -108,7 +108,7 @@ class SourceSystemDataCheckerServiceTest {
         List.of(givenDigitalSpecimenRecord()));
 
     // When
-    service.handleMessages(List.of(event));
+    service.handleMessages(Set.of(event));
 
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
@@ -126,7 +126,7 @@ class SourceSystemDataCheckerServiceTest {
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
-    service.handleMessages(List.of(event));
+    service.handleMessages(Set.of(event));
 
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
@@ -146,7 +146,7 @@ class SourceSystemDataCheckerServiceTest {
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
-    service.handleMessages(List.of(event));
+    service.handleMessages(Set.of(event));
 
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
@@ -167,7 +167,7 @@ class SourceSystemDataCheckerServiceTest {
             MEDIA_URI_1, MEDIA_DOI_1, MEDIA_URI_2, MEDIA_DOI_2))));
 
     // When
-    service.handleMessages(List.of(event));
+    service.handleMessages(Set.of(event));
 
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
@@ -186,7 +186,7 @@ class SourceSystemDataCheckerServiceTest {
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
-    service.handleMessages(List.of(event));
+    service.handleMessages(Set.of(event));
 
     // Then
     then(rabbitMqPublisherService).should().publishMediaEvent(mediaEvent);
@@ -195,64 +195,6 @@ class SourceSystemDataCheckerServiceTest {
     then(mediaRepository).shouldHaveNoMoreInteractions();
   }
 
-  @Test
-  void testNewDuplicateSpecimen() {
-    // Given
-    var event = givenDigitalSpecimenEvent();
-
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
-
-    // When
-    service.handleMessages(List.of(event, event));
-
-    // Then
-    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
-    then(rabbitMqPublisherService).should().republishEvent(event);
-    then(rabbitMqPublisherService).shouldHaveNoMoreInteractions();
-    then(specimenRepository).shouldHaveNoMoreInteractions();
-    then(mediaRepository).shouldHaveNoMoreInteractions();
-  }
-
-  @Test
-  void testNewDuplicateSpecimenDuplicateMedia() {
-    // Given
-    var event = givenDigitalSpecimenEventWithMedia();
-
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
-
-    // When
-    service.handleMessages(List.of(event, event));
-
-    // Then
-    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
-    then(rabbitMqPublisherService).should().republishEvent(event);
-    then(rabbitMqPublisherService).shouldHaveNoMoreInteractions();
-    then(specimenRepository).shouldHaveNoMoreInteractions();
-    then(mediaRepository).shouldHaveNoMoreInteractions();
-  }
-
-  @Test
-  void testNewDuplicateSpecimenDistinctMedia() {
-    // Given
-    var event = givenDigitalSpecimenEventWithMedia();
-    var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false,
-        List.of(givenDigitalMediaEvent(MEDIA_DOI_2, false)));
-
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
-
-    // When
-    service.handleMessages(List.of(event, event2));
-
-    // Then
-    then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
-    then(rabbitMqPublisherService).should().republishEvent(event2);
-    then(rabbitMqPublisherService).shouldHaveNoMoreInteractions();
-    then(specimenRepository).shouldHaveNoMoreInteractions();
-    then(mediaRepository).shouldHaveNoMoreInteractions();
-  }
 
   @Test
   void testTwoNewSpecimens() {
@@ -264,7 +206,7 @@ class SourceSystemDataCheckerServiceTest {
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
-    service.handleMessages(List.of(event, event2));
+    service.handleMessages(Set.of(event, event2));
 
     // Then
     then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());
@@ -284,7 +226,7 @@ class SourceSystemDataCheckerServiceTest {
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
-    service.handleMessages(List.of(event, event2));
+    service.handleMessages(Set.of(event, event2));
 
     // Then
     then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());
@@ -302,7 +244,7 @@ class SourceSystemDataCheckerServiceTest {
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
-    service.handleMessages(List.of(event, event2));
+    service.handleMessages(Set.of(event, event2));
 
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event2);
@@ -318,7 +260,7 @@ class SourceSystemDataCheckerServiceTest {
     given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
-    service.handleMessages(List.of(event, event2));
+    service.handleMessages(Set.of(event, event2));
 
     // Then
     then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());

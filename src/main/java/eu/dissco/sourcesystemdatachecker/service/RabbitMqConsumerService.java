@@ -3,6 +3,7 @@ package eu.dissco.sourcesystemdatachecker.service;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -23,7 +24,7 @@ public class RabbitMqConsumerService {
   public void getMessages(@Payload List<String> messages) {
     var events = messages.stream()
         .map(message -> mapper.readValue(message, DigitalSpecimenEvent.class))
-        .filter(Objects::nonNull).toList();
+        .filter(Objects::nonNull).collect(Collectors.toSet());
     sourceSystemDataCheckerService.handleMessages(events);
   }
 

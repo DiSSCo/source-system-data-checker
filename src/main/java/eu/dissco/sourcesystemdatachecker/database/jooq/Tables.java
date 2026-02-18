@@ -11,16 +11,16 @@ import eu.dissco.sourcesystemdatachecker.database.jooq.tables.DigitalSpecimen;
 /**
  * Convenience access to all tables in public.
  */
-@SuppressWarnings({"all", "unchecked", "rawtypes", "this-escape"})
+@SuppressWarnings({ "all", "unchecked", "rawtypes", "this-escape" })
 public class Tables {
 
-  /**
-   * The table <code>public.digital_media_object</code>.
-   */
-  public static final DigitalMediaObject DIGITAL_MEDIA_OBJECT = DigitalMediaObject.DIGITAL_MEDIA_OBJECT;
+    /**
+     * The table <code>public.digital_media_object</code>.
+     */
+    public static final DigitalMediaObject DIGITAL_MEDIA_OBJECT = DigitalMediaObject.DIGITAL_MEDIA_OBJECT;
 
-  /**
-   * The table <code>public.digital_specimen</code>.
-   */
-  public static final DigitalSpecimen DIGITAL_SPECIMEN = DigitalSpecimen.DIGITAL_SPECIMEN;
+    /**
+     * The table <code>public.digital_specimen</code>.
+     */
+    public static final DigitalSpecimen DIGITAL_SPECIMEN = DigitalSpecimen.DIGITAL_SPECIMEN;
 }

@@ -27,6 +27,7 @@
       <email>soulaine.theocharides@naturalis.nl</email>
       <organization>Distributed System of Scientific Collections</organization>
       <organizationUrl>https://www.dissco.eu/</organizationUrl>
+      <id>https://orcid.org/0000-0001-7573-4330</id>
     </developer>
   </developers>
   <scm>
@@ -37,8 +38,8 @@
     <url>https://github.com/DiSSCo/source-system-data-checker/tree/main</url>
   </scm>
   <properties>
-    <jakarta.json.version>3.1.1</jakarta.json.version>
     <java.version>25</java.version>
+    <jakarta.json.version>3.1.1</jakarta.json.version>
     <jacoco.version>0.8.14</jacoco.version>
     <testcontainers.version>1.21.4</testcontainers.version>
     <sonar.organization>dissco</sonar.organization>
@@ -138,18 +139,6 @@
         <configuration>
           <configurationFile>src/main/resources/jooq-configuration.xml</configurationFile>
         </configuration>
-        <dependencies>
-          <dependency>
-            <groupId>org.postgresql</groupId>
-            <artifactId>postgresql</artifactId>
-            <version>${postgresql.version}</version>
-          </dependency>
-          <dependency>
-            <groupId>org.glassfish.jaxb</groupId>
-            <artifactId>jaxb-runtime</artifactId>
-            <version>${glassfish-jaxb.version}</version>
-          </dependency>
-        </dependencies>
       </plugin>
       <plugin>
         <groupId>org.codehaus.mojo</groupId>

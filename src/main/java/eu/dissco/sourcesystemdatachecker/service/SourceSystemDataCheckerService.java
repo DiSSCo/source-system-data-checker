@@ -13,7 +13,6 @@ import eu.dissco.sourcesystemdatachecker.schema.EntityRelationship;
 import java.net.URI;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -34,10 +33,9 @@ public class SourceSystemDataCheckerService {
   private final MediaRepository mediaRepository;
   private final RabbitMqPublisherService rabbitMqPublisherService;
 
-  public void handleMessages(List<DigitalSpecimenEvent> events) {
-    var uniqueEvents = removeDuplicatesInBatch(events);
+  public void handleMessages(Set<DigitalSpecimenEvent> events) {
     log.info("Received {} unique events", events.size());
-    var specimenEventMap = uniqueEvents.stream().collect(Collectors.toMap(
+    var specimenEventMap = events.stream().collect(Collectors.toMap(
         event -> event.digitalSpecimenWrapper().physicalSpecimenId(),
         Function.identity()
     ));
@@ -100,7 +98,6 @@ public class SourceSystemDataCheckerService {
     Note: currently does NOT filter out media that are unchanged from the specimen event.
     This will be done in a future PR.
    */
-
   public FilteredDigitalSpecimens filterChangedAndNewSpecimens(
       Map<String, DigitalSpecimenEvent> specimenEventMap,
       Map<String, DigitalSpecimenRecord> currentSpecimenRecords) {
@@ -183,12 +180,6 @@ public class SourceSystemDataCheckerService {
         mediaRecord.originalAttributes());
   }
 
-  /*
-    Takes incoming specimen events
-    Checks repository for specimens with (normalised) physical specimen IDs that match the events'
-    Merges duplicate records
-    Returns a map, where the key is the physical specimen ID
-   */
   private List<DigitalSpecimenRecord> getCurrentSpecimen(
       Map<String, DigitalSpecimenEvent> eventMap) {
     return specimenRepository.getDigitalSpecimens(eventMap.keySet());
@@ -205,46 +196,7 @@ public class SourceSystemDataCheckerService {
     return mediaRepository.getExistingDigitalMedia(incomingMediaUris);
   }
 
-  private Set<DigitalSpecimenEvent> removeDuplicatesInBatch(
-      List<DigitalSpecimenEvent> events) {
-    var uniqueSet = new LinkedHashSet<DigitalSpecimenEvent>();
-    var uniqueMediaSet = new LinkedHashSet<String>();
-    var map = events.stream()
-        .collect(
-            Collectors.groupingBy(event -> event.digitalSpecimenWrapper().physicalSpecimenId()));
-    for (var entry : map.entrySet()) {
-      if (entry.getValue().size() > 1) {
-        log.warn("Found {} duplicate specimen in batch for id {}", entry.getValue().size(),
-            entry.getKey());
-        var specimenIsNotPublished = true;
-        for (var duplicateSpecimenEvent : entry.getValue()) {
-          if (specimenIsNotPublished) {
-            addToUniqueSets(uniqueSet, duplicateSpecimenEvent, uniqueMediaSet);
-            specimenIsNotPublished = false;
-          } else {
-            republishSpecimenEvent(duplicateSpecimenEvent);
-          }
-        }
-      } else {
-        addToUniqueSets(uniqueSet, entry.getValue().getFirst(), uniqueMediaSet);
-      }
-    }
-    return uniqueSet;
-  }
-
-  private void republishSpecimenEvent(DigitalSpecimenEvent event) {
-    rabbitMqPublisherService.republishEvent(event);
-  }
-
-  private static void addToUniqueSets(LinkedHashSet<DigitalSpecimenEvent> uniqueSet,
-      DigitalSpecimenEvent entry, HashSet<String> uniqueMediaSet) {
-    uniqueSet.add(entry);
-    entry.digitalMediaEvents().forEach(mediaEvent -> uniqueMediaSet.add(
-        mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI()));
-  }
-
   // Pairs current specimens with current media in the DigitalSpecimenRecord
-
   private Map<String, DigitalSpecimenRecord> pairSpecimensWithMedia(
       List<DigitalSpecimenRecord> currentDigitalSpecimens,
       Map<String, DigitalMediaRecord> currentDigitalMedia) {

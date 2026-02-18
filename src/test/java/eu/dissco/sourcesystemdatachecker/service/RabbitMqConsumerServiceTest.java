@@ -5,6 +5,7 @@ import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalSpecimenEv
 import static org.mockito.BDDMockito.then;
 
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +33,7 @@ class RabbitMqConsumerServiceTest {
     consumerService.getMessages(List.of(message));
 
     // Then
-    then(service).should().handleMessages(List.of(givenDigitalSpecimenEvent()));
+    then(service).should().handleMessages(Set.of(givenDigitalSpecimenEvent()));
   }
 
 }
