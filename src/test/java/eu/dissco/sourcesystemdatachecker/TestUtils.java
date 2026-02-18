@@ -10,14 +10,17 @@ import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaWrapper;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenRecord;
 import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenWrapper;
+import eu.dissco.sourcesystemdatachecker.schema.Agent;
+import eu.dissco.sourcesystemdatachecker.schema.Agent.Type;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalMedia;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalSpecimen;
 import eu.dissco.sourcesystemdatachecker.schema.EntityRelationship;
+import eu.dissco.sourcesystemdatachecker.schema.OdsHasRole;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.time.Instant;
 import java.time.ZoneOffset;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -26,6 +29,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 public class TestUtils {
+
+  private static final String DOI_PROXY = "https://doi.org/";
 
   private TestUtils() {
     // Utility class
@@ -67,7 +72,7 @@ public class TestUtils {
       String physicalSpecimenId, Map<String, String> mediaUriIdMap) {
     return new DigitalSpecimenRecord(
         id, givenDigitalSpecimenWrapperWithMediaErs(physicalSpecimenId, false,
-            new HashSet<>(mediaUriIdMap.values())), mediaUriIdMap.keySet());
+        new ArrayList<>(mediaUriIdMap.values())), mediaUriIdMap.keySet());
   }
 
 
@@ -89,6 +94,17 @@ public class TestUtils {
         false);
   }
 
+  public static DigitalSpecimenEvent givenDigitalSpecimenEventWithMediaEr(String physicalSpecimenId,
+      boolean specimenIsChanged, List<DigitalMediaEvent> mediaEvents, List<String> mediaDois) {
+    return new DigitalSpecimenEvent(
+        Set.of(),
+        givenDigitalSpecimenWrapperWithMediaErs(physicalSpecimenId, specimenIsChanged, mediaDois),
+        mediaEvents,
+        false,
+        false
+    );
+  }
+
   public static DigitalSpecimenWrapper givenDigitalSpecimenWrapper(String physicalSpecimenId,
       boolean isChanged) {
     return new DigitalSpecimenWrapper(
@@ -101,7 +117,7 @@ public class TestUtils {
 
   public static DigitalSpecimenWrapper givenDigitalSpecimenWrapperWithMediaErs(
       String physicalSpecimenId,
-      boolean isChanged, Set<String> mediaIds) {
+      boolean isChanged, List<String> mediaIds) {
     return new DigitalSpecimenWrapper(
         physicalSpecimenId,
         "ods:DigitalSpecimen",
@@ -111,12 +127,23 @@ public class TestUtils {
     );
   }
 
-  private static List<EntityRelationship> givenMediaEntityRelationships(Set<String> mediaIds) {
+  private static List<EntityRelationship> givenMediaEntityRelationships(List<String> mediaIds) {
     return mediaIds.stream()
         .map(mediaId -> new EntityRelationship()
+            .withType("ods:EntityRelationship")
             .withDwcRelationshipOfResource("hasDigitalMedia")
-            .withDwcRelatedResourceID(mediaId)
-            .withOdsRelatedResourceURI(URI.create(mediaId)))
+            .withDwcRelatedResourceID(DOI_PROXY + mediaId)
+            .withOdsRelatedResourceURI(URI.create(DOI_PROXY + mediaId))
+            .withOdsHasAgents(List.of(
+                new Agent()
+                    .withId(DOI_PROXY + "10.3535/some-id")
+                    .withType(Type.SCHEMA_SOFTWARE_APPLICATION)
+                    .withSchemaIdentifier(DOI_PROXY + "10.3535/some-id")
+                    .withSchemaName("DiSSCo Digital Specimen Processing Service")
+                    .withOdsHasRoles(List.of(new OdsHasRole()
+                        .withType("schema:role")
+                        .withSchemaRoleName("processing-service")))
+            )))
         .toList();
   }
 
