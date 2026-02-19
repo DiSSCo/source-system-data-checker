@@ -17,19 +17,6 @@ public class RabbitMqProperties {
 
   private NameUsage nameUsage = new NameUsage();
   private Media media = new Media();
-  private Republish republish = new Republish();
-
-  @Data
-  @Validated
-  public static class Republish {
-
-    @NotBlank
-    private String exchangeName = "source-system-data-checker-exchange";
-
-    @NotBlank
-    private String routingKeyName = "source-system-data-checker";
-  }
-
 
   @Data
   @Validated
