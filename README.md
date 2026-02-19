@@ -99,6 +99,8 @@ mvn jsonschema2pojo:generate
 `spring.datasource.url=`database url (starting with `jdbc:postgresql://`)
 `spring.datasource.username=` database username
 `spring.datasource.password=` database password
+`application.update-taxonomy` = flag to indicate that taxonomy has changed. "Unchanged" specimens
+should be passed to the NU queue to verify if the COL ID has changed.
 
 ### Optional Properties
 
