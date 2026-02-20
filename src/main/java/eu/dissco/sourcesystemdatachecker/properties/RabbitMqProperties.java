@@ -17,19 +17,7 @@ public class RabbitMqProperties {
 
   private NameUsage nameUsage = new NameUsage();
   private Media media = new Media();
-  private Republish republish = new Republish();
-
-  @Data
-  @Validated
-  public static class Republish {
-
-    @NotBlank
-    private String exchangeName = "source-system-data-checker-exchange";
-
-    @NotBlank
-    private String routingKeyName = "source-system-data-checker";
-  }
-
+  private MasScheduler masScheduler = new MasScheduler();
 
   @Data
   @Validated
@@ -52,6 +40,17 @@ public class RabbitMqProperties {
 
     @NotNull
     private String routingKeyName = "digital-media";
+  }
+
+  @Data
+  @Validated
+  public static class MasScheduler {
+
+    @NotBlank
+    private String exchangeName = "mas-scheduler-exchange";
+
+    @NotNull
+    private String routingKeyName = "mas-scheduler";
   }
 
 }

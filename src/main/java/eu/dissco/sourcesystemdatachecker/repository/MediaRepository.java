@@ -2,7 +2,7 @@ package eu.dissco.sourcesystemdatachecker.repository;
 
 import static eu.dissco.sourcesystemdatachecker.database.jooq.Tables.DIGITAL_MEDIA_OBJECT;
 
-import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaRecord;
+import eu.dissco.sourcesystemdatachecker.domain.media.DigitalMediaRecord;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalMedia;
 import java.time.Instant;
 import java.util.Map;

@@ -9,7 +9,7 @@ import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalSpecimenWr
 import static eu.dissco.sourcesystemdatachecker.database.jooq.Tables.DIGITAL_SPECIMEN;
 import static org.assertj.core.api.AssertionsForInterfaceTypes.assertThat;
 
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenRecord;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenRecord;
 import java.time.Instant;
 import java.util.List;
 import java.util.Set;
