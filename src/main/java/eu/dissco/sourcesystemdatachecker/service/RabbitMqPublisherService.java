@@ -18,13 +18,6 @@ public class RabbitMqPublisherService {
   private final RabbitTemplate rabbitTemplate;
   private final RabbitMqProperties rabbitMqProperties;
 
-  public void republishEvent(DigitalSpecimenEvent event) {
-    rabbitTemplate.convertAndSend(
-        rabbitMqProperties.getRepublish().getExchangeName(),
-        rabbitMqProperties.getRepublish().getRoutingKeyName(), mapper.writeValueAsString(event)
-    );
-  }
-
   public void publishNameUsageEvent(DigitalSpecimenEvent event) {
     rabbitTemplate.convertAndSend(
         rabbitMqProperties.getNameUsage().getExchangeName(),

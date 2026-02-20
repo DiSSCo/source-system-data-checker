@@ -31,7 +31,6 @@ class RabbitMqPublisherServiceTest {
   static void setupContainer() throws IOException, InterruptedException {
     container = new RabbitMQContainer("rabbitmq:4.0.8-management-alpine");
     container.start();
-    declareRabbitResources(rabbitMqProperties.getRepublish().getRoutingKeyName());
     declareRabbitResources(rabbitMqProperties.getNameUsage().getRoutingKeyName());
     declareRabbitResources(rabbitMqProperties.getMedia().getRoutingKeyName());
     CachingConnectionFactory factory = new CachingConnectionFactory(container.getHost());
@@ -58,19 +57,6 @@ class RabbitMqPublisherServiceTest {
   void setup() {
     rabbitMqPublisherService = new RabbitMqPublisherService(MAPPER, rabbitTemplate,
         rabbitMqProperties);
-  }
-
-  @Test
-  void testRepublishEvent()  {
-    // Given
-
-    // When
-    rabbitMqPublisherService.republishEvent(givenDigitalSpecimenEvent());
-
-    // Then
-    var result =
-        rabbitTemplate.receive(rabbitMqProperties.getRepublish().getRoutingKeyName() + "-queue");
-    assertThat(result.getBody()).isNotNull();
   }
 
   @Test

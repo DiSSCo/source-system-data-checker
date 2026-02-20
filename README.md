@@ -30,25 +30,20 @@ an update.
 * `name-usage-service-queue` - regular ingestion process, when specimen and media are new/changed
 * `digital-media-queue` - when only media needs to be updated, send directly to processing service
   and skip NU service
-* `digital-specimen-queue`- to NU service, but only specimen and a subset (or none) of media are
-  new/changed
 
 ## Distinguishing Between Changes in Specimens and Media
 
 A specimen event may include zero or more media objects. An unchanged specimen may not necessarily
-mean its media are unchanged, and vice versa. To address this, we may publish objects to one of
-three queues:
+mean its media are unchanged. We address three scenarios here:
 
 1. **Specimen and Media are unchanged**: Update last checked on all objects. The ingestion process
    stops here.
-2. **Specimen and all media are changed**: Publish the whole SpecimenEvent to the next step in the
-   ingestion pipeline, `name-usage-service`
-3. **Specimen is unchanged, media are changed**: update last_checked on specimen. Publish the media
-   to the `media-queue`, bypassing the name usage service
+2. **Specimen is changed**: Publish the whole SpecimenEvent to the next step in the
+   ingestion pipeline, `name-usage-service`.
+    * Note: Media may be unchanged in this event. This is addressed in the processing service.
+3. **Specimen is unchanged, media are changed**: update last_checked on specimen. Publish the
+   changed media to the `media-queue`, bypassing the name usage service
     - Note: media entity relationships will not be changed when ingested through this queue
-4. **Specimen is changed, media are unchanged**: update last_checked on media. Publish specimen to
-   the `name-usage-service-specimen` queue.
-    - Planned for future release
 
 # Running Locally
 
@@ -65,7 +60,7 @@ Running locally requires:
 DiSSCo uses JSON schemas to generate domain objects (e.g. Digital Specimens, Digital Media, etc)
 based on the openDS specification. These files are stored in the
 `/target/generated-sources/jsonschema2pojo directory`, and must be generated before running locally.
-The following steps indicate how to generate these objects. 
+The following steps indicate how to generate these objects.
 
 ### Importing Up To-Date JSON Schemas
 
