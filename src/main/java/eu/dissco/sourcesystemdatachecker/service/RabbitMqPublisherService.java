@@ -1,7 +1,8 @@
 package eu.dissco.sourcesystemdatachecker.service;
 
-import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaEvent;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
+import eu.dissco.sourcesystemdatachecker.domain.mas.MasJobRequest;
+import eu.dissco.sourcesystemdatachecker.domain.media.DigitalMediaEvent;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenEvent;
 import eu.dissco.sourcesystemdatachecker.properties.RabbitMqProperties;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +31,12 @@ public class RabbitMqPublisherService {
         rabbitMqProperties.getMedia().getExchangeName(),
         rabbitMqProperties.getMedia().getRoutingKeyName(), mapper.writeValueAsString(event)
     );
+  }
+
+  public void publishMasJobRequest(MasJobRequest masJobRequest) {
+    rabbitTemplate.convertAndSend(rabbitMqProperties.getMasScheduler().getExchangeName(),
+        rabbitMqProperties.getMasScheduler().getRoutingKeyName(),
+        mapper.writeValueAsString(masJobRequest));
   }
 
 }

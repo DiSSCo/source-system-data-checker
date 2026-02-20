@@ -1,4 +1,4 @@
-package eu.dissco.sourcesystemdatachecker.domain;
+package eu.dissco.sourcesystemdatachecker.domain.media;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Set;

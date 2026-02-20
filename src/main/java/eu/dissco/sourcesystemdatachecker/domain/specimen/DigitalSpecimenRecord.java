@@ -1,4 +1,4 @@
-package eu.dissco.sourcesystemdatachecker.domain;
+package eu.dissco.sourcesystemdatachecker.domain.specimen;
 
 import java.util.Set;
 

@@ -1,6 +1,6 @@
 package eu.dissco.sourcesystemdatachecker.service;
 
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenEvent;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;

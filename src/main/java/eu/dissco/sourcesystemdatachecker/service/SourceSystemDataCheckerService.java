@@ -1,22 +1,28 @@
 package eu.dissco.sourcesystemdatachecker.service;
 
-import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaEvent;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaRecord;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenRecord;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenWrapper;
-import eu.dissco.sourcesystemdatachecker.domain.FilteredDigitalSpecimens;
-import eu.dissco.sourcesystemdatachecker.domain.FilteredDigtialMedia;
+import static eu.dissco.sourcesystemdatachecker.service.ServiceUtils.DOI_PROXY;
+import static eu.dissco.sourcesystemdatachecker.service.ServiceUtils.getAccessUri;
+
+import eu.dissco.sourcesystemdatachecker.domain.media.DigitalMediaEvent;
+import eu.dissco.sourcesystemdatachecker.domain.media.DigitalMediaRecord;
+import eu.dissco.sourcesystemdatachecker.domain.media.FilteredDigtialMedia;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenEvent;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenRecord;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenWrapper;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.FilteredDigitalSpecimens;
 import eu.dissco.sourcesystemdatachecker.repository.MediaRepository;
 import eu.dissco.sourcesystemdatachecker.repository.SpecimenRepository;
 import eu.dissco.sourcesystemdatachecker.schema.EntityRelationship;
-
 import java.net.URI;
-import java.util.*;
-import java.util.Map.Entry;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,6 +35,7 @@ public class SourceSystemDataCheckerService {
   private final SpecimenRepository specimenRepository;
   private final MediaRepository mediaRepository;
   private final RabbitMqPublisherService rabbitMqPublisherService;
+  private final MasSchedulerService masSchedulerService;
 
   public void handleMessages(Set<DigitalSpecimenEvent> events) {
     log.info("Received {} unique events", events.size());
@@ -57,6 +64,22 @@ public class SourceSystemDataCheckerService {
         filteredMediaEvents.unchangedMedia().size());
     publishChangedAndNewSpecimens(filteredSpecimenEvents.newOrChangedSpecimens());
     publishedChangedMedia(filteredMediaEvents.newOrChangedMedia());
+    scheduleMasForSpecimen(filteredSpecimenEvents);
+    scheduleMasForMedia(filteredMediaEvents, events);
+  }
+
+  private void scheduleMasForSpecimen(FilteredDigitalSpecimens filteredDigitalSpecimens) {
+    if (!filteredDigitalSpecimens.unchangedSpecimens().isEmpty()) {
+      masSchedulerService.scheduleMasForSpecimen(filteredDigitalSpecimens.unchangedSpecimens());
+    }
+  }
+
+  private void scheduleMasForMedia(FilteredDigtialMedia filteredDigtialMedia,
+      Set<DigitalSpecimenEvent> specimenEvents) {
+    if (filteredDigtialMedia.unchangedMedia().isEmpty()) {
+      return;
+    }
+    masSchedulerService.scheduleMasForMedia(filteredDigtialMedia, specimenEvents);
   }
 
   private void publishChangedAndNewSpecimens(Set<DigitalSpecimenEvent> digitalSpecimenEvents) {
@@ -123,7 +146,7 @@ public class SourceSystemDataCheckerService {
   private static boolean specimenMediaEntityRelationshipsAreChanged(
       DigitalSpecimenEvent specimenEvent, DigitalSpecimenRecord currentSpecimenRecord) {
     var incomingMedia = specimenEvent.digitalMediaEvents().stream()
-        .map(SourceSystemDataCheckerService::getAccessUri).collect(
+        .map(ServiceUtils::getAccessUri).collect(
             Collectors.toSet());
     return !incomingMedia.equals(currentSpecimenRecord.mediaUris());
   }
@@ -176,13 +199,9 @@ public class SourceSystemDataCheckerService {
     var incomingMediaUris = specimenEventMap.values().stream()
         .map(DigitalSpecimenEvent::digitalMediaEvents)
         .flatMap(Collection::stream)
-        .map(SourceSystemDataCheckerService::getAccessUri)
+        .map(ServiceUtils::getAccessUri)
         .collect(Collectors.toSet());
     return mediaRepository.getExistingDigitalMedia(incomingMediaUris);
-  }
-
-  private static String getAccessUri(DigitalMediaEvent mediaEvent) {
-    return mediaEvent.digitalMediaWrapper().attributes().getAcAccessURI();
   }
 
   // Pairs current specimens with current media in the DigitalSpecimenRecord
@@ -225,7 +244,7 @@ public class SourceSystemDataCheckerService {
         .filter(er -> "hasDigitalMedia".equals(er.getDwcRelationshipOfResource()))
         .map(EntityRelationship::getOdsRelatedResourceURI)
         .map(URI::toString)
-        .map(uri -> uri.replace("https://doi.org/", ""))
+        .map(uri -> uri.replace(DOI_PROXY, ""))
         .collect(Collectors.toSet());
   }
 }

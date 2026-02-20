@@ -45,6 +45,12 @@ mean its media are unchanged. We address three scenarios here:
    changed media to the `media-queue`, bypassing the name usage service
     - Note: media entity relationships will not be changed when ingested through this queue
 
+## Scheduling Forced MAS Events
+
+Requested MASs in the Event are typically scheduled only if the specimen is new or updated; however,
+the `forceMasSchedule` can be set to also schedule MASs on unchanged specimens. The SSDC will
+schedule MASs for unchanged specimens with this flag set to true.
+
 # Running Locally
 
 ## Requirements
