@@ -8,7 +8,7 @@ import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalMediaRecor
 import static eu.dissco.sourcesystemdatachecker.database.jooq.tables.DigitalMediaObject.DIGITAL_MEDIA_OBJECT;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaRecord;
+import eu.dissco.sourcesystemdatachecker.domain.media.DigitalMediaRecord;
 import java.time.Instant;
 import java.util.Map;
 import java.util.Set;

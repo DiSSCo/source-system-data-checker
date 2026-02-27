@@ -1,4 +1,4 @@
-package eu.dissco.sourcesystemdatachecker.domain;
+package eu.dissco.sourcesystemdatachecker.domain.media;
 
 import eu.dissco.sourcesystemdatachecker.schema.DigitalMedia;
 import tools.jackson.databind.JsonNode;

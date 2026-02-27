@@ -1,4 +1,4 @@
-package eu.dissco.sourcesystemdatachecker.domain;
+package eu.dissco.sourcesystemdatachecker.domain.specimen;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalSpecimen;

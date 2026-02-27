@@ -2,8 +2,8 @@ package eu.dissco.sourcesystemdatachecker.repository;
 
 import static eu.dissco.sourcesystemdatachecker.database.jooq.Tables.DIGITAL_SPECIMEN;
 
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenRecord;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenWrapper;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenRecord;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenWrapper;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalSpecimen;
 import java.time.Instant;
 import java.util.List;

@@ -4,12 +4,14 @@ import static eu.dissco.sourcesystemdatachecker.configuration.ApplicationConfigu
 
 import com.fasterxml.jackson.annotation.JsonSetter.Value;
 import com.fasterxml.jackson.annotation.Nulls;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaEvent;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaRecord;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalMediaWrapper;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenEvent;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenRecord;
-import eu.dissco.sourcesystemdatachecker.domain.DigitalSpecimenWrapper;
+import eu.dissco.sourcesystemdatachecker.domain.mas.MasJobRequest;
+import eu.dissco.sourcesystemdatachecker.domain.mas.MjrTargetType;
+import eu.dissco.sourcesystemdatachecker.domain.media.DigitalMediaEvent;
+import eu.dissco.sourcesystemdatachecker.domain.media.DigitalMediaRecord;
+import eu.dissco.sourcesystemdatachecker.domain.media.DigitalMediaWrapper;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenEvent;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenRecord;
+import eu.dissco.sourcesystemdatachecker.domain.specimen.DigitalSpecimenWrapper;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalMedia;
 import eu.dissco.sourcesystemdatachecker.schema.DigitalSpecimen;
 import eu.dissco.sourcesystemdatachecker.schema.EntityRelationship;
@@ -38,6 +40,9 @@ public class TestUtils {
   public static final String SPECIMEN_DOI = "10.3535/AAA-AAA-AAA";
   public static final String MEDIA_DOI_1 = "10.3535/111-111-111";
   public static final String MEDIA_DOI_2 = "10.3535/222-222-222";
+  public static final String MAS_ID = "10.2000.1025/GGG-EEE-FFF";
+  public static final String APP_PID = "10.2000.1025/HHH-III-JJJ";
+  public static final String DOI_PROXY = "https://doi.org/";
   public static final String CURRENT_VAL = "default";
   public static final String CHANGED_VAL = "changed";
   public static final Instant CREATED = Instant.parse("2022-11-01T09:59:24.000Z");
@@ -67,7 +72,7 @@ public class TestUtils {
       String physicalSpecimenId, Map<String, String> mediaUriIdMap) {
     return new DigitalSpecimenRecord(
         id, givenDigitalSpecimenWrapperWithMediaErs(physicalSpecimenId, false,
-            new HashSet<>(mediaUriIdMap.values())), mediaUriIdMap.keySet());
+        new HashSet<>(mediaUriIdMap.values())), mediaUriIdMap.keySet());
   }
 
 
@@ -87,6 +92,39 @@ public class TestUtils {
         mediaEvents,
         false,
         false);
+  }
+
+  public static DigitalSpecimenEvent givenDigitalSpecimenEventWithMasSchedule(Set<String> masIds,
+      List<DigitalMediaEvent> mediaEvents) {
+    return new DigitalSpecimenEvent(
+        masIds,
+        givenDigitalSpecimenWrapper(PHYSICAL_ID_1, false),
+        mediaEvents,
+        true,
+        false);
+
+  }
+
+  public static DigitalSpecimenEvent givenDigitalSpecimenEventWithMasSchedule(Set<String> masIds) {
+    return givenDigitalSpecimenEventWithMasSchedule(masIds, List.of());
+  }
+
+  public static DigitalMediaEvent givenDigitalMediaEventWithMasSchedule(Set<String> masIds) {
+    return new DigitalMediaEvent(
+        masIds,
+        givenDigitalMediaWrapper(MEDIA_URI_1, false),
+        true
+    );
+  }
+
+  public static MasJobRequest givenMasJobRequest(String targetId, MjrTargetType mjrTargetType) {
+    return new MasJobRequest(
+        MAS_ID,
+        DOI_PROXY + targetId,
+        false,
+        APP_PID,
+        mjrTargetType
+    );
   }
 
   public static DigitalSpecimenWrapper givenDigitalSpecimenWrapper(String physicalSpecimenId,
@@ -161,6 +199,5 @@ public class TestUtils {
   private static DigitalMedia givenDigitalMedia(String uri) {
     return new DigitalMedia().withAcAccessURI(uri);
   }
-
 
 }
