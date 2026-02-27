@@ -115,9 +115,7 @@ public class TestUtils {
         givenDigitalMediaWrapper(MEDIA_URI_1, false),
         true
     );
-
   }
-
 
   public static MasJobRequest givenMasJobRequest(String targetId, MjrTargetType mjrTargetType) {
     return new MasJobRequest(
@@ -127,7 +125,6 @@ public class TestUtils {
         APP_PID,
         mjrTargetType
     );
-
   }
 
   public static DigitalSpecimenWrapper givenDigitalSpecimenWrapper(String physicalSpecimenId,
@@ -202,6 +199,5 @@ public class TestUtils {
   private static DigitalMedia givenDigitalMedia(String uri) {
     return new DigitalMedia().withAcAccessURI(uri);
   }
-
 
 }
