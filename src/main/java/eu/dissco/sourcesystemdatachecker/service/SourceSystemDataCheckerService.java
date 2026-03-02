@@ -56,7 +56,7 @@ public class SourceSystemDataCheckerService {
         filteredSpecimenEvents.unchangedSpecimens().values(),
         currentMediaRecords);
     log.info("{} media are changed and belong to an unchanged specimen",
-        filteredMediaEvents.newOrChangedMedia());
+        filteredMediaEvents.newOrChangedMedia().size());
     updateLastCheckedSpecimens(filteredSpecimenEvents.unchangedSpecimens().keySet());
     updateLastCheckedMedia(filteredMediaEvents.unchangedMedia());
     log.info("Successfully updated lastChecked for {} specimens and {} media",
