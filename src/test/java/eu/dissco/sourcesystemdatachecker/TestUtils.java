@@ -90,8 +90,8 @@ public class TestUtils {
         Set.of(),
         givenDigitalSpecimenWrapper(physicalSpecimenId, specimenIsChanged),
         mediaEvents,
-        false,
-        false);
+        false
+    );
   }
 
   public static DigitalSpecimenEvent givenDigitalSpecimenEventWithMasSchedule(Set<String> masIds,
@@ -100,8 +100,8 @@ public class TestUtils {
         masIds,
         givenDigitalSpecimenWrapper(PHYSICAL_ID_1, false),
         mediaEvents,
-        true,
-        false);
+        true
+    );
 
   }
 
