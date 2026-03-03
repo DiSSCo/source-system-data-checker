@@ -58,20 +58,19 @@ class SourceSystemDataCheckerServiceTest {
     var event = givenDigitalSpecimenEvent();
 
     given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event));
 
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(mediaRepository).shouldHaveNoInteractions();
   }
 
   @Test
   void testUnchangedSpecimenNoMedia() {
     // Given
     var event = givenDigitalSpecimenEvent();
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
     given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
         List.of(givenDigitalSpecimenRecord()));
 
@@ -81,7 +80,7 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).shouldHaveNoInteractions();
     then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI));
-    then(mediaRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoInteractions();
     then(masSchedulerService).should()
         .scheduleMasForSpecimen(Map.of(SPECIMEN_DOI, givenDigitalSpecimenEvent()));
     then(masSchedulerService).shouldHaveNoMoreInteractions();
@@ -112,7 +111,6 @@ class SourceSystemDataCheckerServiceTest {
   void testChangedSpecimenNoMedia() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Map.of());
     given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
         List.of(givenDigitalSpecimenRecord()));
 
@@ -122,7 +120,7 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
     then(specimenRepository).shouldHaveNoMoreInteractions();
-    then(mediaRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoInteractions();
     then(masSchedulerService).shouldHaveNoInteractions();
   }
 
@@ -217,7 +215,6 @@ class SourceSystemDataCheckerServiceTest {
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_2, false, List.of());
 
     given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));
@@ -225,8 +222,8 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());
     then(specimenRepository).shouldHaveNoMoreInteractions();
-    then(mediaRepository).shouldHaveNoMoreInteractions();
     then(masSchedulerService).shouldHaveNoInteractions();
+    then(mediaRepository).shouldHaveNoInteractions();
   }
 
 
@@ -238,7 +235,6 @@ class SourceSystemDataCheckerServiceTest {
 
     given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(
         List.of(givenDigitalSpecimenRecord()));
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));
@@ -246,6 +242,7 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());
     then(masSchedulerService).shouldHaveNoInteractions();
+    then(mediaRepository).shouldHaveNoInteractions();
   }
 
 
@@ -257,7 +254,6 @@ class SourceSystemDataCheckerServiceTest {
 
     given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(
         List.of(givenDigitalSpecimenRecord()));
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));
@@ -265,6 +261,7 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event2);
     then(masSchedulerService).should().scheduleMasForSpecimen(Map.of(SPECIMEN_DOI, event));
+    then(mediaRepository).shouldHaveNoInteractions();
   }
 
   @Test
