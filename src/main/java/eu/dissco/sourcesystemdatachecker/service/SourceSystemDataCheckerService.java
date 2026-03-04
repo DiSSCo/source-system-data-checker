@@ -45,6 +45,8 @@ public class SourceSystemDataCheckerService {
     ));
     var currentSpecimenRecords = getCurrentSpecimen(specimenEventMap);
     var currentMediaRecords = getCurrentMedia(specimenEventMap);
+    log.info("Received {} existing specimen and {} existing media", currentSpecimenRecords.size(),
+        currentMediaRecords.size());
     var currentSpecimensWithMediaUris = pairSpecimensWithMedia(currentSpecimenRecords,
         currentMediaRecords);
     var filteredSpecimenEvents = filterChangedAndNewSpecimens(specimenEventMap,
