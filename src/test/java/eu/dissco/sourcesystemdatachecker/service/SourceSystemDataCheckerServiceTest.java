@@ -60,8 +60,6 @@ class SourceSystemDataCheckerServiceTest {
 
     given(specimenRepository.getDigitalSpecimens(anySet(), anySet())).willReturn(
         Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
-        Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event));
@@ -75,7 +73,8 @@ class SourceSystemDataCheckerServiceTest {
   void testUnchangedSpecimenNoMedia() {
     // Given
     var event = givenDigitalSpecimenEvent();
-    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
+    given(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
         List.of(givenDigitalSpecimenRecord()));
 
     // When
@@ -116,7 +115,6 @@ class SourceSystemDataCheckerServiceTest {
   void testChangedSpecimenNoMedia() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of());
-    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(Map.of());
     given(
         specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
         List.of(givenDigitalSpecimenRecord()));
@@ -227,8 +225,6 @@ class SourceSystemDataCheckerServiceTest {
 
     given(specimenRepository.getDigitalSpecimens(anySet(), anySet())).willReturn(
         Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
-        Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));
@@ -249,8 +245,6 @@ class SourceSystemDataCheckerServiceTest {
 
     given(specimenRepository.getDigitalSpecimens(anySet(), anySet())).willReturn(
         List.of(givenDigitalSpecimenRecord()));
-    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
-        Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));
@@ -270,8 +264,6 @@ class SourceSystemDataCheckerServiceTest {
 
     given(specimenRepository.getDigitalSpecimens(anySet(), anySet())).willReturn(
         List.of(givenDigitalSpecimenRecord()));
-    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
-        Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));

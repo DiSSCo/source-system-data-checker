@@ -211,6 +211,7 @@ public class SourceSystemDataCheckerService {
     if (!incomingMediaUris.isEmpty()) {
       return mediaRepository.getExistingDigitalMedia(incomingMediaUris, sourceSystemIds);
     }
+    return Map.of();
   }
 
   // Pairs current specimens with current media in the DigitalSpecimenRecord
