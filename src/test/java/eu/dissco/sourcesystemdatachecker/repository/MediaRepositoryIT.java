@@ -1,5 +1,6 @@
 package eu.dissco.sourcesystemdatachecker.repository;
 
+import static eu.dissco.sourcesystemdatachecker.TestUtils.APP_PID;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.CREATED;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MAPPER;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_DOI_1;
@@ -39,7 +40,7 @@ class MediaRepositoryIT extends BaseRepositoryIT {
     insertMedia(expected);
 
     // When
-    var result = mediaRepository.getExistingDigitalMedia(Set.of(MEDIA_URI_1));
+    var result = mediaRepository.getExistingDigitalMedia(Set.of(MEDIA_URI_1), Set.of(APP_PID));
 
     // Then
     assertThat(result).isEqualTo(Map.of(MEDIA_URI_1, expected));
@@ -78,6 +79,8 @@ class MediaRepositoryIT extends BaseRepositoryIT {
             JSONB.jsonb(
                 digitalMediaRecord.originalAttributes().toString()))
         .set(DIGITAL_MEDIA_OBJECT.MODIFIED, CREATED)
+        .set(DIGITAL_MEDIA_OBJECT.SOURCE_SYSTEM_ID,
+            digitalMediaRecord.attributes().getOdsSourceSystemID())
         .execute();
   }
 
