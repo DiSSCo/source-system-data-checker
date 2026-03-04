@@ -68,16 +68,14 @@ class SourceSystemDataCheckerServiceTest {
 
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
+    then(mediaRepository).shouldHaveNoInteractions();
   }
 
   @Test
   void testUnchangedSpecimenNoMedia() {
     // Given
     var event = givenDigitalSpecimenEvent();
-    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
-        Collections.emptyMap());
-    given(
-        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
+    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
         List.of(givenDigitalSpecimenRecord()));
 
     // When
@@ -86,7 +84,7 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).shouldHaveNoInteractions();
     then(specimenRepository).should().updateLastChecked(Set.of(SPECIMEN_DOI));
-    then(mediaRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoInteractions();
     then(masSchedulerService).should()
         .scheduleMasForSpecimen(Map.of(SPECIMEN_DOI, givenDigitalSpecimenEvent()));
     then(masSchedulerService).shouldHaveNoMoreInteractions();
@@ -129,7 +127,7 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event);
     then(specimenRepository).shouldHaveNoMoreInteractions();
-    then(mediaRepository).shouldHaveNoMoreInteractions();
+    then(mediaRepository).shouldHaveNoInteractions();
     then(masSchedulerService).shouldHaveNoInteractions();
   }
 
@@ -238,8 +236,8 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());
     then(specimenRepository).shouldHaveNoMoreInteractions();
-    then(mediaRepository).shouldHaveNoMoreInteractions();
     then(masSchedulerService).shouldHaveNoInteractions();
+    then(mediaRepository).shouldHaveNoInteractions();
   }
 
 
@@ -260,6 +258,7 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should(times(2)).publishNameUsageEvent(any());
     then(masSchedulerService).shouldHaveNoInteractions();
+    then(mediaRepository).shouldHaveNoInteractions();
   }
 
 
@@ -280,6 +279,7 @@ class SourceSystemDataCheckerServiceTest {
     // Then
     then(rabbitMqPublisherService).should().publishNameUsageEvent(event2);
     then(masSchedulerService).should().scheduleMasForSpecimen(Map.of(SPECIMEN_DOI, event));
+    then(mediaRepository).shouldHaveNoInteractions();
   }
 
   @Test

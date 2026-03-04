@@ -208,25 +208,31 @@ public class SourceSystemDataCheckerService {
           incomingMediaUris.add(getAccessUri(mediaEvent));
           sourceSystemIds.add(mediaEvent.digitalMediaWrapper().attributes().getOdsSourceSystemID());
         });
-    return mediaRepository.getExistingDigitalMedia(incomingMediaUris, sourceSystemIds);
+    if (!incomingMediaUris.isEmpty()) {
+      return mediaRepository.getExistingDigitalMedia(incomingMediaUris, sourceSystemIds);
+    }
   }
 
   // Pairs current specimens with current media in the DigitalSpecimenRecord
   private Map<String, DigitalSpecimenRecord> pairSpecimensWithMedia(
       List<DigitalSpecimenRecord> currentDigitalSpecimens,
       Map<String, DigitalMediaRecord> currentDigitalMedia) {
-
-    var mediaIdMap = currentDigitalMedia.values().stream()
-        .collect(Collectors.toMap(
-            DigitalMediaRecord::id,
-            Function.identity()
-        ));
+    if (currentDigitalMedia.isEmpty()) {
+      return currentDigitalSpecimens.stream()
+          .collect(Collectors.toMap(
+              specimenRecord -> specimenRecord.digitalSpecimenWrapper().physicalSpecimenId(),
+              Function.identity()
+          ));
+    }
+    HashMap<String, DigitalMediaRecord> mediaIdMap = HashMap.newHashMap(currentDigitalMedia.size());
+    currentDigitalMedia.values().forEach(m -> mediaIdMap.put(m.id(), m));
     return currentDigitalSpecimens.stream()
         .map(specimenRecord -> {
           var mediaIds = getCurrentDigitalMediaRecordsForSpecimen(
               specimenRecord.digitalSpecimenWrapper());
           var mediaUris = mediaIds.stream()
               .map(mediaIdMap::get)
+              .filter(Objects::nonNull)
               .map(DigitalMediaRecord::accessURI)
               .collect(Collectors.toSet());
           return new DigitalSpecimenRecord(
@@ -234,8 +240,7 @@ public class SourceSystemDataCheckerService {
               specimenRecord.digitalSpecimenWrapper(),
               mediaUris
           );
-        })
-        .collect(Collectors.toMap(
+        }).collect(Collectors.toMap(
             specimenRecord -> specimenRecord.digitalSpecimenWrapper().physicalSpecimenId(),
             Function.identity()
         ));
@@ -251,7 +256,12 @@ public class SourceSystemDataCheckerService {
         .filter(er -> "hasDigitalMedia".equals(er.getDwcRelationshipOfResource()))
         .map(EntityRelationship::getOdsRelatedResourceURI)
         .map(URI::toString)
-        .map(uri -> uri.replace(DOI_PROXY, ""))
+        .map(SourceSystemDataCheckerService::stripDoiProxy)
         .collect(Collectors.toSet());
+  }
+
+  private static String stripDoiProxy(String uri) {
+    return uri.startsWith(DOI_PROXY) ?
+        uri.substring(DOI_PROXY.length()) : uri;
   }
 }
