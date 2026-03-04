@@ -1,5 +1,6 @@
 package eu.dissco.sourcesystemdatachecker.service;
 
+import static eu.dissco.sourcesystemdatachecker.TestUtils.APP_PID;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_DOI_1;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_DOI_2;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_URI_1;
@@ -57,8 +58,10 @@ class SourceSystemDataCheckerServiceTest {
     // Given
     var event = givenDigitalSpecimenEvent();
 
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
+    given(specimenRepository.getDigitalSpecimens(anySet(), anySet())).willReturn(
+        Collections.emptyList());
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
+        Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event));
@@ -71,8 +74,10 @@ class SourceSystemDataCheckerServiceTest {
   void testUnchangedSpecimenNoMedia() {
     // Given
     var event = givenDigitalSpecimenEvent();
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
-    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
+        Collections.emptyMap());
+    given(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
         List.of(givenDigitalSpecimenRecord()));
 
     // When
@@ -91,9 +96,10 @@ class SourceSystemDataCheckerServiceTest {
   void testUnchangedSpecimenUnchangedMedia() {
     // Given
     var event = givenDigitalSpecimenEventWithMedia();
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
-    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
+    given(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
         List.of(givenDigitalSpecimenRecordWithMedia()));
     var filteredMedia = new FilteredDigtialMedia(Set.of(), Set.of(givenDigitalMediaRecord()));
 
@@ -112,8 +118,9 @@ class SourceSystemDataCheckerServiceTest {
   void testChangedSpecimenNoMedia() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Map.of());
-    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(Map.of());
+    given(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
         List.of(givenDigitalSpecimenRecord()));
 
     // When
@@ -130,9 +137,10 @@ class SourceSystemDataCheckerServiceTest {
   void testChangedSpecimenWithMedia() {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of(givenDigitalMediaEvent()));
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
-    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
+    given(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
@@ -151,9 +159,10 @@ class SourceSystemDataCheckerServiceTest {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false,
         List.of(givenDigitalMediaEvent(), givenDigitalMediaEvent(MEDIA_URI_2, false)));
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
-    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
+    given(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
@@ -171,10 +180,11 @@ class SourceSystemDataCheckerServiceTest {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false,
         List.of(givenDigitalMediaEvent()));
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord(), MEDIA_URI_2,
             givenDigitalMediaRecord(MEDIA_DOI_2, MEDIA_URI_2)));
-    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
+    given(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
         List.of(givenDigitalSpecimenRecord(SPECIMEN_DOI, PHYSICAL_ID_1, Map.of(
             MEDIA_URI_1, MEDIA_DOI_1, MEDIA_URI_2, MEDIA_DOI_2))));
 
@@ -193,9 +203,10 @@ class SourceSystemDataCheckerServiceTest {
     // Given
     var mediaEvent = givenDigitalMediaEvent(MEDIA_URI_1, true);
     var specimenEvent = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false, List.of(mediaEvent));
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
-    given(specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1))).willReturn(
+    given(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
@@ -216,8 +227,10 @@ class SourceSystemDataCheckerServiceTest {
     var event = givenDigitalSpecimenEvent();
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_2, false, List.of());
 
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
+    given(specimenRepository.getDigitalSpecimens(anySet(), anySet())).willReturn(
+        Collections.emptyList());
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
+        Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));
@@ -236,9 +249,10 @@ class SourceSystemDataCheckerServiceTest {
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of()); // exists, is changed
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_2, false, List.of()); // New
 
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(
+    given(specimenRepository.getDigitalSpecimens(anySet(), anySet())).willReturn(
         List.of(givenDigitalSpecimenRecord()));
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
+        Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));
@@ -255,9 +269,10 @@ class SourceSystemDataCheckerServiceTest {
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, false, List.of()); // exists, is changed
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_2, false, List.of()); // New
 
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(
+    given(specimenRepository.getDigitalSpecimens(anySet(), anySet())).willReturn(
         List.of(givenDigitalSpecimenRecord()));
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
+        Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));
@@ -273,8 +288,10 @@ class SourceSystemDataCheckerServiceTest {
     var event = givenDigitalSpecimenEventWithMedia();
     var event2 = givenDigitalSpecimenEvent(PHYSICAL_ID_2, false, List.of(givenDigitalMediaEvent()));
 
-    given(specimenRepository.getDigitalSpecimens(anySet())).willReturn(Collections.emptyList());
-    given(mediaRepository.getExistingDigitalMedia(anySet())).willReturn(Collections.emptyMap());
+    given(specimenRepository.getDigitalSpecimens(anySet(), anySet())).willReturn(
+        Collections.emptyList());
+    given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
+        Collections.emptyMap());
 
     // When
     service.handleMessages(Set.of(event, event2));

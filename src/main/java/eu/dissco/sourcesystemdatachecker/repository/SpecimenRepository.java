@@ -23,10 +23,12 @@ public class SpecimenRepository {
   private final DSLContext context;
   private final JsonMapper mapper;
 
-  public List<DigitalSpecimenRecord> getDigitalSpecimens(Set<String> specimenList) {
+  public List<DigitalSpecimenRecord> getDigitalSpecimens(Set<String> specimenList,
+      Set<String> sourceSystemIdList) {
     return context.select(DIGITAL_SPECIMEN.asterisk())
         .from(DIGITAL_SPECIMEN)
         .where(DIGITAL_SPECIMEN.PHYSICAL_SPECIMEN_ID.in(specimenList))
+        .and(DIGITAL_SPECIMEN.SOURCE_SYSTEM_ID.in(sourceSystemIdList))
         .fetch(this::mapToDigitalSpecimenRecord);
   }
 

@@ -132,7 +132,8 @@ public class TestUtils {
     return new DigitalSpecimenWrapper(
         physicalSpecimenId,
         "ods:DigitalSpecimen",
-        new DigitalSpecimen(),
+        new DigitalSpecimen()
+            .withOdsSourceSystemID(APP_PID),
         givenOriginalAttributes(isChanged)
     );
   }
@@ -143,8 +144,9 @@ public class TestUtils {
     return new DigitalSpecimenWrapper(
         physicalSpecimenId,
         "ods:DigitalSpecimen",
-        new DigitalSpecimen().withOdsHasEntityRelationships(
-            givenMediaEntityRelationships(mediaIds)),
+        new DigitalSpecimen()
+            .withOdsHasEntityRelationships(givenMediaEntityRelationships(mediaIds))
+            .withOdsSourceSystemID(APP_PID),
         givenOriginalAttributes(isChanged)
     );
   }
@@ -197,7 +199,9 @@ public class TestUtils {
   }
 
   private static DigitalMedia givenDigitalMedia(String uri) {
-    return new DigitalMedia().withAcAccessURI(uri);
+    return new DigitalMedia()
+        .withAcAccessURI(uri)
+        .withOdsSourceSystemID(APP_PID);
   }
 
 }

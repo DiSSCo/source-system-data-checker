@@ -190,18 +190,25 @@ public class SourceSystemDataCheckerService {
 
   private List<DigitalSpecimenRecord> getCurrentSpecimen(
       Map<String, DigitalSpecimenEvent> eventMap) {
-    return specimenRepository.getDigitalSpecimens(eventMap.keySet());
+    var sourceSystemIds = eventMap.values().stream()
+        .map(specimenEvent -> specimenEvent.digitalSpecimenWrapper().attributes()
+            .getOdsSourceSystemID())
+        .collect(Collectors.toSet());
+    return specimenRepository.getDigitalSpecimens(eventMap.keySet(), sourceSystemIds);
   }
 
   private Map<String, DigitalMediaRecord> getCurrentMedia(
       Map<String, DigitalSpecimenEvent> specimenEventMap) {
-
-    var incomingMediaUris = specimenEventMap.values().stream()
+    var incomingMediaUris = new HashSet<String>();
+    var sourceSystemIds = new HashSet<String>();
+    specimenEventMap.values().stream()
         .map(DigitalSpecimenEvent::digitalMediaEvents)
         .flatMap(Collection::stream)
-        .map(ServiceUtils::getAccessUri)
-        .collect(Collectors.toSet());
-    return mediaRepository.getExistingDigitalMedia(incomingMediaUris);
+        .forEach(mediaEvent -> {
+          incomingMediaUris.add(getAccessUri(mediaEvent));
+          sourceSystemIds.add(mediaEvent.digitalMediaWrapper().attributes().getOdsSourceSystemID());
+        });
+    return mediaRepository.getExistingDigitalMedia(incomingMediaUris, sourceSystemIds);
   }
 
   // Pairs current specimens with current media in the DigitalSpecimenRecord

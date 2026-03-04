@@ -16,6 +16,7 @@ create table digital_specimen
     deleted                timestamp with time zone,
     data                   jsonb,
     original_data          jsonb,
+    col_id text,
     modified               timestamp with time zone
 );
 
@@ -38,5 +39,6 @@ create table digital_media_object
     deleted             timestamp with time zone,
     data                jsonb                    not null,
     original_data       jsonb                    not null,
-    modified            timestamp with time zone
+    modified         timestamp with time zone,
+    source_system_id text
 );

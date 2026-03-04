@@ -1,5 +1,6 @@
 package eu.dissco.sourcesystemdatachecker.repository;
 
+import static eu.dissco.sourcesystemdatachecker.TestUtils.APP_PID;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.CREATED;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MAPPER;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.PHYSICAL_ID_1;
@@ -33,7 +34,7 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
   }
 
   @Test
-  void testGetSpecimen(){
+  void testGetSpecimen() {
     // Given
     var expected = new DigitalSpecimenRecord(
         SPECIMEN_DOI,
@@ -43,14 +44,14 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
     insertSpecimen(expected);
 
     // When
-    var result = repository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1));
+    var result = repository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID));
 
     // Then
     assertThat(result).isEqualTo(List.of(expected));
   }
 
   @Test
-  void testUpdateLastChecked(){
+  void testUpdateLastChecked() {
     // Given
     insertSpecimen(givenDigitalSpecimenRecord());
 
@@ -66,13 +67,14 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
   }
 
 
-  private void insertSpecimen(DigitalSpecimenRecord specimenRecord){
+  private void insertSpecimen(DigitalSpecimenRecord specimenRecord) {
     context.insertInto(DIGITAL_SPECIMEN)
         .set(DIGITAL_SPECIMEN.ID, specimenRecord.id())
         .set(DIGITAL_SPECIMEN.TYPE, "ods:DigitalSpecimen")
         .set(DIGITAL_SPECIMEN.VERSION, 1)
         .set(DIGITAL_SPECIMEN.MIDSLEVEL, (short) 1)
-        .set(DIGITAL_SPECIMEN.PHYSICAL_SPECIMEN_ID, specimenRecord.digitalSpecimenWrapper().physicalSpecimenId())
+        .set(DIGITAL_SPECIMEN.PHYSICAL_SPECIMEN_ID,
+            specimenRecord.digitalSpecimenWrapper().physicalSpecimenId())
         .set(DIGITAL_SPECIMEN.PHYSICAL_SPECIMEN_TYPE, "PreservedSpecimen")
         .set(DIGITAL_SPECIMEN.SPECIMEN_NAME, "name")
         .set(DIGITAL_SPECIMEN.ORGANIZATION_ID, "https://ror.org/aaa")
@@ -82,10 +84,12 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
         .set(DIGITAL_SPECIMEN.MODIFIED, CREATED)
         .set(DIGITAL_SPECIMEN.DATA, JSONB.valueOf(
             MAPPER.valueToTree(specimenRecord.digitalSpecimenWrapper().attributes())
-                    .toString().replace("\\u0000", "")))
+                .toString().replace("\\u0000", "")))
         .set(DIGITAL_SPECIMEN.ORIGINAL_DATA,
             JSONB.valueOf(
                 specimenRecord.digitalSpecimenWrapper().originalAttributes().toString()))
+        .set(DIGITAL_SPECIMEN.SOURCE_SYSTEM_ID,
+            specimenRecord.digitalSpecimenWrapper().attributes().getOdsSourceSystemID())
         .execute();
   }
 
