@@ -42,6 +42,7 @@ public class TestUtils {
   public static final String MEDIA_DOI_2 = "10.3535/222-222-222";
   public static final String MAS_ID = "10.2000.1025/GGG-EEE-FFF";
   public static final String APP_PID = "10.2000.1025/HHH-III-JJJ";
+  public static final String SOURCE_SYSTEM_PID = "10.2000.1025/999-888-777";
   public static final String DOI_PROXY = "https://doi.org/";
   public static final String CURRENT_VAL = "default";
   public static final String CHANGED_VAL = "changed";
@@ -132,7 +133,8 @@ public class TestUtils {
     return new DigitalSpecimenWrapper(
         physicalSpecimenId,
         "ods:DigitalSpecimen",
-        new DigitalSpecimen(),
+        new DigitalSpecimen()
+            .withOdsSourceSystemID(SOURCE_SYSTEM_PID),
         givenOriginalAttributes(isChanged)
     );
   }
@@ -143,8 +145,9 @@ public class TestUtils {
     return new DigitalSpecimenWrapper(
         physicalSpecimenId,
         "ods:DigitalSpecimen",
-        new DigitalSpecimen().withOdsHasEntityRelationships(
-            givenMediaEntityRelationships(mediaIds)),
+        new DigitalSpecimen()
+            .withOdsHasEntityRelationships(givenMediaEntityRelationships(mediaIds))
+            .withOdsSourceSystemID(SOURCE_SYSTEM_PID),
         givenOriginalAttributes(isChanged)
     );
   }
@@ -197,7 +200,9 @@ public class TestUtils {
   }
 
   private static DigitalMedia givenDigitalMedia(String uri) {
-    return new DigitalMedia().withAcAccessURI(uri);
+    return new DigitalMedia()
+        .withAcAccessURI(uri)
+        .withOdsSourceSystemID(SOURCE_SYSTEM_PID);
   }
 
 }

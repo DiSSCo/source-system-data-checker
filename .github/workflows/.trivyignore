@@ -5,3 +5,7 @@ CVE-2026-25646
 # March 2, 2026
 # Issue with jackson, spring needs to update its version
 GHSA-72hv-8253-57qq
+
+# March 5, 2026
+# Issue with jackson, spring needs to update its version
+CVE-2026-29062
