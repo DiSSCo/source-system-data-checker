@@ -1,9 +1,9 @@
 package eu.dissco.sourcesystemdatachecker.repository;
 
-import static eu.dissco.sourcesystemdatachecker.TestUtils.APP_PID;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.CREATED;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MAPPER;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.PHYSICAL_ID_1;
+import static eu.dissco.sourcesystemdatachecker.TestUtils.SOURCE_SYSTEM_PID;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.SPECIMEN_DOI;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalSpecimenRecord;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalSpecimenWrapper;
@@ -44,7 +44,7 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
     insertSpecimen(expected);
 
     // When
-    var result = repository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID));
+    var result = repository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(SOURCE_SYSTEM_PID));
 
     // Then
     assertThat(result).isEqualTo(List.of(expected));

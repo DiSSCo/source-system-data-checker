@@ -1,12 +1,12 @@
 package eu.dissco.sourcesystemdatachecker.service;
 
-import static eu.dissco.sourcesystemdatachecker.TestUtils.APP_PID;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_DOI_1;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_DOI_2;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_URI_1;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.MEDIA_URI_2;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.PHYSICAL_ID_1;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.PHYSICAL_ID_2;
+import static eu.dissco.sourcesystemdatachecker.TestUtils.SOURCE_SYSTEM_PID;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.SPECIMEN_DOI;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalMediaEvent;
 import static eu.dissco.sourcesystemdatachecker.TestUtils.givenDigitalMediaRecord;
@@ -74,7 +74,7 @@ class SourceSystemDataCheckerServiceTest {
     // Given
     var event = givenDigitalSpecimenEvent();
     given(
-        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(SOURCE_SYSTEM_PID))).willReturn(
         List.of(givenDigitalSpecimenRecord()));
 
     // When
@@ -96,7 +96,7 @@ class SourceSystemDataCheckerServiceTest {
     given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
     given(
-        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(SOURCE_SYSTEM_PID))).willReturn(
         List.of(givenDigitalSpecimenRecordWithMedia()));
     var filteredMedia = new FilteredDigtialMedia(Set.of(), Set.of(givenDigitalMediaRecord()));
 
@@ -116,7 +116,7 @@ class SourceSystemDataCheckerServiceTest {
     // Given
     var event = givenDigitalSpecimenEvent(PHYSICAL_ID_1, true, List.of());
     given(
-        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(SOURCE_SYSTEM_PID))).willReturn(
         List.of(givenDigitalSpecimenRecord()));
 
     // When
@@ -136,7 +136,7 @@ class SourceSystemDataCheckerServiceTest {
     given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
     given(
-        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(SOURCE_SYSTEM_PID))).willReturn(
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
@@ -158,7 +158,7 @@ class SourceSystemDataCheckerServiceTest {
     given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
     given(
-        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(SOURCE_SYSTEM_PID))).willReturn(
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
@@ -180,7 +180,7 @@ class SourceSystemDataCheckerServiceTest {
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord(), MEDIA_URI_2,
             givenDigitalMediaRecord(MEDIA_DOI_2, MEDIA_URI_2)));
     given(
-        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(SOURCE_SYSTEM_PID))).willReturn(
         List.of(givenDigitalSpecimenRecord(SPECIMEN_DOI, PHYSICAL_ID_1, Map.of(
             MEDIA_URI_1, MEDIA_DOI_1, MEDIA_URI_2, MEDIA_DOI_2))));
 
@@ -202,7 +202,7 @@ class SourceSystemDataCheckerServiceTest {
     given(mediaRepository.getExistingDigitalMedia(anySet(), anySet())).willReturn(
         Map.of(MEDIA_URI_1, givenDigitalMediaRecord()));
     given(
-        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(APP_PID))).willReturn(
+        specimenRepository.getDigitalSpecimens(Set.of(PHYSICAL_ID_1), Set.of(SOURCE_SYSTEM_PID))).willReturn(
         List.of(givenDigitalSpecimenRecordWithMedia()));
 
     // When
