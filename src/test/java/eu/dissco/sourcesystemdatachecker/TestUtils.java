@@ -75,12 +75,9 @@ public class TestUtils {
         new HashSet<>(mediaUriIdMap.values())), mediaUriIdMap.keySet());
   }
 
-
   public static DigitalSpecimenEvent givenDigitalSpecimenEvent() {
     return givenDigitalSpecimenEvent(PHYSICAL_ID_1, false, List.of());
   }
-
-
 
   public static DigitalSpecimenEvent givenDigitalSpecimenEventWithMedia() {
     return givenDigitalSpecimenEvent(PHYSICAL_ID_1, false, List.of(givenDigitalMediaEvent()));
