@@ -21,7 +21,9 @@ the source system data changes; it is the raw data from the source system as cap
 translator. If the incoming `original_data` differs from what is in the database, we consider this
 an update.
 
-## RabbitMQ Queues
+## Publishing New/Updated Data
+
+### RabbitMQ Queues
 
 **Consumes from:** `source-system-data-checker-queue` (from translator)
 
@@ -30,6 +32,18 @@ an update.
 * `name-usage-service-queue` - regular ingestion process, when specimen and media are new/changed
 * `digital-media-queue` - when only media needs to be updated, send directly to processing service
   and skip NU service
+
+### Updating the data
+
+The SSDC's role in the data ingestion process is to filter out resources with unchanged source
+system data, leaving additional processing to the processing service downstream. However, the SSDC
+does add an identifier to the specimen/media events if they exist. This means that
+a redundant check doesn't have to occur in the processing service.
+
+The following fields are updated in the Digital Specimen/Digital Media: 
+
+* `dcterms:identifier`
+* `@id`
 
 ## Distinguishing Between Changes in Specimens and Media
 

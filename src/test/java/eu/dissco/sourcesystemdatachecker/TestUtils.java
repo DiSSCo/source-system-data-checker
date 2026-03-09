@@ -72,7 +72,7 @@ public class TestUtils {
       String physicalSpecimenId, Map<String, String> mediaUriIdMap) {
     return new DigitalSpecimenRecord(
         id, givenDigitalSpecimenWrapperWithMediaErs(physicalSpecimenId, false,
-        new HashSet<>(mediaUriIdMap.values())), mediaUriIdMap.keySet());
+        new HashSet<>(mediaUriIdMap.values())), mediaUriIdMap);
   }
 
 
@@ -80,15 +80,29 @@ public class TestUtils {
     return givenDigitalSpecimenEvent(PHYSICAL_ID_1, false, List.of());
   }
 
+
+
   public static DigitalSpecimenEvent givenDigitalSpecimenEventWithMedia() {
     return givenDigitalSpecimenEvent(PHYSICAL_ID_1, false, List.of(givenDigitalMediaEvent()));
   }
 
+  public static DigitalSpecimenEvent givenDigitalSpecimenEventWithMedia(String id){
+    var mediaEvent = givenDigitalMediaEvent(
+        MEDIA_URI_1, false, MEDIA_DOI_1);
+    return givenDigitalSpecimenEvent(PHYSICAL_ID_1, false, List.of(mediaEvent), id);
+  }
+
   public static DigitalSpecimenEvent givenDigitalSpecimenEvent(String physicalSpecimenId,
       boolean specimenIsChanged, List<DigitalMediaEvent> mediaEvents) {
+    return givenDigitalSpecimenEvent(
+        physicalSpecimenId, specimenIsChanged, mediaEvents, null);
+  }
+
+  public static DigitalSpecimenEvent givenDigitalSpecimenEvent(String physicalSpecimenId,
+      boolean specimenIsChanged, List<DigitalMediaEvent> mediaEvents, String id) {
     return new DigitalSpecimenEvent(
         Set.of(),
-        givenDigitalSpecimenWrapper(physicalSpecimenId, specimenIsChanged),
+        givenDigitalSpecimenWrapper(physicalSpecimenId, specimenIsChanged, id),
         mediaEvents,
         false
     );
@@ -98,11 +112,10 @@ public class TestUtils {
       List<DigitalMediaEvent> mediaEvents) {
     return new DigitalSpecimenEvent(
         masIds,
-        givenDigitalSpecimenWrapper(PHYSICAL_ID_1, false),
+        givenDigitalSpecimenWrapper(PHYSICAL_ID_1, false, null),
         mediaEvents,
         true
     );
-
   }
 
   public static DigitalSpecimenEvent givenDigitalSpecimenEventWithMasSchedule(Set<String> masIds) {
@@ -128,11 +141,14 @@ public class TestUtils {
   }
 
   public static DigitalSpecimenWrapper givenDigitalSpecimenWrapper(String physicalSpecimenId,
-      boolean isChanged) {
+      boolean isChanged, String id) {
+    var doi = id == null ? null : DOI_PROXY + id;
     return new DigitalSpecimenWrapper(
         physicalSpecimenId,
         "ods:DigitalSpecimen",
-        new DigitalSpecimen(),
+        new DigitalSpecimen()
+            .withDctermsIdentifier(doi)
+            .withId(doi),
         givenOriginalAttributes(isChanged)
     );
   }
@@ -171,7 +187,7 @@ public class TestUtils {
     return new DigitalMediaRecord(
         id,
         uri,
-        givenDigitalMedia(uri),
+        givenDigitalMedia(uri, null),
         givenOriginalAttributes(false)
     );
   }
@@ -181,23 +197,34 @@ public class TestUtils {
   }
 
   public static DigitalMediaEvent givenDigitalMediaEvent(String uri, boolean mediaIsChanged) {
+    return givenDigitalMediaEvent(uri, mediaIsChanged, null);
+  }
+
+  public static DigitalMediaEvent givenDigitalMediaEvent(String uri, boolean mediaIsChanged, String id){
     return new DigitalMediaEvent(
         Set.of(),
-        givenDigitalMediaWrapper(uri, mediaIsChanged),
+        givenDigitalMediaWrapper(uri, mediaIsChanged, id),
         false
     );
   }
 
   public static DigitalMediaWrapper givenDigitalMediaWrapper(String uri, boolean mediaIsChanged) {
+    return givenDigitalMediaWrapper(uri, mediaIsChanged, null);
+  }
+
+  public static DigitalMediaWrapper givenDigitalMediaWrapper(String uri, boolean mediaIsChanged, String id) {
     return new DigitalMediaWrapper(
         "ods:DigtialMedia",
-        givenDigitalMedia(uri),
+        givenDigitalMedia(uri, id),
         givenOriginalAttributes(mediaIsChanged)
     );
   }
 
-  private static DigitalMedia givenDigitalMedia(String uri) {
-    return new DigitalMedia().withAcAccessURI(uri);
+  private static DigitalMedia givenDigitalMedia(String uri, String id) {
+    var doi = id == null ? null : DOI_PROXY + id;
+    return new DigitalMedia().withAcAccessURI(uri)
+        .withId(doi)
+        .withDctermsIdentifier(doi);
   }
 
 }

@@ -37,7 +37,7 @@ class SpecimenRepositoryIT extends BaseRepositoryIT {
     // Given
     var expected = new DigitalSpecimenRecord(
         SPECIMEN_DOI,
-        givenDigitalSpecimenWrapper(PHYSICAL_ID_1, false),
+        givenDigitalSpecimenWrapper(PHYSICAL_ID_1, false, null),
         null
     );
     insertSpecimen(expected);
