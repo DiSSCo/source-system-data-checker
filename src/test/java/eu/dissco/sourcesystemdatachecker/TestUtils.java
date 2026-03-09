@@ -72,7 +72,7 @@ public class TestUtils {
       String physicalSpecimenId, Map<String, String> mediaUriIdMap) {
     return new DigitalSpecimenRecord(
         id, givenDigitalSpecimenWrapperWithMediaErs(physicalSpecimenId, false,
-        new HashSet<>(mediaUriIdMap.values())), mediaUriIdMap);
+        new HashSet<>(mediaUriIdMap.values())), mediaUriIdMap.keySet());
   }
 
 
