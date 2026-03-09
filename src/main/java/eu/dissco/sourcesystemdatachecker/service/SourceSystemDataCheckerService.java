@@ -152,7 +152,7 @@ public class SourceSystemDataCheckerService {
     var incomingMedia = specimenEvent.digitalMediaEvents().stream()
         .map(ServiceUtils::getAccessUri).collect(
             Collectors.toSet());
-    return !incomingMedia.equals(currentSpecimenRecord.mediaUriMap().keySet());
+    return !incomingMedia.equals(currentSpecimenRecord.mediaUris());
   }
 
   /*
@@ -303,16 +303,14 @@ public class SourceSystemDataCheckerService {
         .map(specimenRecord -> {
           var mediaIdsForSpecimen = getCurrentDigitalMediaRecordsForSpecimen(
               specimenRecord.digitalSpecimenWrapper());
-          var mediaUriMap = mediaIdsForSpecimen.stream()
+          var mediaUris = mediaIdsForSpecimen.stream()
               .filter(mediaIdMapFull::containsKey)
-              .collect(Collectors.toMap(
-                  mediaIdMapFull::get,
-                  Function.identity()
-              ));
+              .map(mediaIdMapFull::get)
+              .collect(Collectors.toSet());
           return new DigitalSpecimenRecord(
               specimenRecord.id(),
               specimenRecord.digitalSpecimenWrapper(),
-              mediaUriMap
+              mediaUris
           );
         }).collect(Collectors.toMap(
             specimenRecord -> specimenRecord.digitalSpecimenWrapper().physicalSpecimenId(),

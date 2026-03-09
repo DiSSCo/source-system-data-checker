@@ -1,11 +1,11 @@
 package eu.dissco.sourcesystemdatachecker.domain.specimen;
 
-import java.util.Map;
+import java.util.Set;
 
 public record DigitalSpecimenRecord(
     String id,
     DigitalSpecimenWrapper digitalSpecimenWrapper,
-    Map<String, String> mediaUriMap
+    Set<String> mediaUris
 ) {
 
 }
