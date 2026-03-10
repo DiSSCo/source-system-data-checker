@@ -45,6 +45,8 @@ public class SourceSystemDataCheckerService {
     ));
     var currentSpecimenRecords = getCurrentSpecimen(specimenEventMap);
     var currentMediaRecords = getCurrentMedia(specimenEventMap);
+    log.info("Received {} existing specimen and {} existing media", currentSpecimenRecords.size(),
+        currentMediaRecords.size());
     var currentSpecimensWithMediaUris = pairSpecimensWithMedia(currentSpecimenRecords,
         currentMediaRecords);
     var filteredSpecimenEvents = filterChangedAndNewSpecimens(specimenEventMap,
@@ -190,18 +192,26 @@ public class SourceSystemDataCheckerService {
 
   private List<DigitalSpecimenRecord> getCurrentSpecimen(
       Map<String, DigitalSpecimenEvent> eventMap) {
-    return specimenRepository.getDigitalSpecimens(eventMap.keySet());
+    var sourceSystemIds = eventMap.values().stream()
+        .map(specimenEvent -> specimenEvent.digitalSpecimenWrapper().attributes()
+            .getOdsSourceSystemID())
+        .collect(Collectors.toSet());
+    return specimenRepository.getDigitalSpecimens(eventMap.keySet(), sourceSystemIds);
   }
 
   private Map<String, DigitalMediaRecord> getCurrentMedia(
       Map<String, DigitalSpecimenEvent> specimenEventMap) {
-    var incomingMediaUris = specimenEventMap.values().stream()
+    var incomingMediaUris = new HashSet<String>();
+    var sourceSystemIds = new HashSet<String>();
+    specimenEventMap.values().stream()
         .map(DigitalSpecimenEvent::digitalMediaEvents)
         .flatMap(Collection::stream)
-        .map(ServiceUtils::getAccessUri)
-        .collect(Collectors.toSet());
+        .forEach(mediaEvent -> {
+          incomingMediaUris.add(getAccessUri(mediaEvent));
+          sourceSystemIds.add(mediaEvent.digitalMediaWrapper().attributes().getOdsSourceSystemID());
+        });
     if (!incomingMediaUris.isEmpty()) {
-      return mediaRepository.getExistingDigitalMedia(incomingMediaUris);
+      return mediaRepository.getExistingDigitalMedia(incomingMediaUris, sourceSystemIds);
     }
     return Map.of();
   }

@@ -25,10 +25,12 @@ public class MediaRepository {
   private final JsonMapper mapper;
 
   // Maps Media URI to its DOI
-  public Map<String, DigitalMediaRecord> getExistingDigitalMedia(Set<String> mediaURIs) {
+  public Map<String, DigitalMediaRecord> getExistingDigitalMedia(Set<String> mediaURIs,
+      Set<String> sourceSystemIds) {
     return context.select(DIGITAL_MEDIA_OBJECT.asterisk())
         .from(DIGITAL_MEDIA_OBJECT)
         .where(DIGITAL_MEDIA_OBJECT.MEDIA_URL.in(mediaURIs))
+        .and(DIGITAL_MEDIA_OBJECT.SOURCE_SYSTEM_ID.in(sourceSystemIds))
         .fetch(this::mapToDigitalMediaRecord)
         .stream()
         .collect(Collectors.toMap(
