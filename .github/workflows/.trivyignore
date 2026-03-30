@@ -6,10 +6,6 @@ CVE-2026-25646
 # Issue with zlib, alpine image
 CVE-2026-22184
 
-# March 2, 2026
-# Issue with jackson, spring needs to update its version
-GHSA-72hv-8253-57qq
-
-# March 5, 2026
-# Issue with jackson, spring needs to update its version
-CVE-2026-29062
+# March 23, 2026
+# Issue with libexpat, alpine image
+CVE-2026-32767
