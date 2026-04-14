@@ -13,3 +13,11 @@ CVE-2026-33416
 # April 7, 2026
 # Issue with libpng, alpine image
 CVE-2026-33636
+
+# April 14, 2026
+# Issue with Jackson, spring boot needs to update
+GHSA-2m67-wjpj-xhg9
+
+# April 14, 2026
+# Issue with OpenSSL, alpine image
+CVE-2026-28390
