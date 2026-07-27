@@ -75,7 +75,7 @@ public class MasSchedulerService {
         .filter(entry -> !entry.masList().isEmpty())
         // Transform Media Records into MAS Job Requests
         .map(entry -> entry.masList().stream()
-            .map(masId -> buildMasJobRequest(masId, getAccessUri(entry),
+            .map(masId -> buildMasJobRequest(masId, unchangedMediaRecordMap.get(getAccessUri(entry)).id(),
                 MjrTargetType.DIGITAL_MEDIA))
             .collect(Collectors.toSet()))
         .flatMap(Collection::stream)
