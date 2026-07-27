@@ -36,8 +36,7 @@ public class MasSchedulerService {
 
   public void scheduleMasForMedia(FilteredDigtialMedia filteredDigtialMedia,
       Set<DigitalSpecimenEvent> specimenEvents) {
-    var unchangedMediaEventMap = buildMediaEventMap(filteredDigtialMedia, specimenEvents);
-    var recordsToSchedule = getMasJobRequestsForMedia(unchangedMediaEventMap);
+    var recordsToSchedule = getMasJobRequestsForMedia(filteredDigtialMedia, specimenEvents);
     publishMas(recordsToSchedule);
     log.debug("Scheduled {} forced MAS Jobs on unchanged media", recordsToSchedule.size());
   }
@@ -59,31 +58,28 @@ public class MasSchedulerService {
   }
 
   private Set<MasJobRequest> getMasJobRequestsForMedia(
-      Map<String, DigitalMediaEvent> unchangedMediaEvents) {
-    return unchangedMediaEvents.entrySet().stream()
-        .filter(entry -> entry.getValue().forceMasSchedule())
-        .filter(entry -> !entry.getValue().masList().isEmpty())
-        .map(entry -> entry.getValue().masList().stream()
-            .map(masId -> buildMasJobRequest(masId, entry.getKey(), MjrTargetType.DIGITAL_MEDIA))
-            .collect(Collectors.toSet()))
-        .flatMap(Collection::stream)
-        .collect(Collectors.toSet());
-  }
-
-  private static Map<String, DigitalMediaEvent> buildMediaEventMap(
       FilteredDigtialMedia filteredDigtialMedia, Set<DigitalSpecimenEvent> specimenEvents) {
-    var mediaRecordMap = filteredDigtialMedia.unchangedMedia().stream().collect(Collectors.toMap(
+    var unchangedMediaRecordMap = filteredDigtialMedia.unchangedMedia().stream().collect(Collectors.toMap(
         DigitalMediaRecord::accessURI,
         Function.identity()
     ));
+    // Only schedule MAS jobs on existing records
     return specimenEvents.stream()
         .map(DigitalSpecimenEvent::digitalMediaEvents)
         .flatMap(Collection::stream)
-        .filter(mediaEvent -> mediaRecordMap.containsKey(getAccessUri(mediaEvent)))
-        .collect(Collectors.toMap(
-            mediaEvent -> mediaRecordMap.get(getAccessUri(mediaEvent)).id(),
-            Function.identity()
-        ));
+        // Get unchanged media events from the specimen events
+        .filter(mediaEvent -> unchangedMediaRecordMap.containsKey(getAccessUri(mediaEvent)))
+        // Filter out media events that do not need MAS scheduling
+        .filter(DigitalMediaEvent::forceMasSchedule)
+        // Filter out media events that do not have any MASs requested
+        .filter(entry -> !entry.masList().isEmpty())
+        // Transform Media Records into MAS Job Requests
+        .map(entry -> entry.masList().stream()
+            .map(masId -> buildMasJobRequest(masId, unchangedMediaRecordMap.get(getAccessUri(entry)).id(),
+                MjrTargetType.DIGITAL_MEDIA))
+            .collect(Collectors.toSet()))
+        .flatMap(Collection::stream)
+        .collect(Collectors.toSet());
   }
 
   private MasJobRequest buildMasJobRequest(String masId, String targetId,
